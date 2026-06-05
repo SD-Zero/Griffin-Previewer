@@ -29,10 +29,10 @@
 <body>
 <div class="viewer-container">
     <model-viewer id="griffin" src="griffin.glb" camera-controls auto-rotate interaction-prompt="none" shadow-intensity="1" exposure="1.2" environment-image="neutral"></model-viewer>
-    <model-viewer id="crest-v" src="" interaction-prompt="none" shadow-intensity="1" exposure="1.2" environment-image="neutral"></model-viewer>
-    <model-viewer id="wings-v" src="" interaction-prompt="none" shadow-intensity="1" exposure="1.2" environment-image="neutral"></model-viewer>
-    <model-viewer id="tail-v" src="" interaction-prompt="none" shadow-intensity="1" exposure="1.2" environment-image="neutral"></model-viewer>
-    <model-viewer id="eyes-v" src="Griffin_LQ_Eyes_Mesh.glb" interaction-prompt="none" shadow-intensity="1" exposure="1.2" environment-image="neutral"></model-viewer>
+    <model-viewer id="crest-v" src="" interaction-prompt="none"></model-viewer>
+    <model-viewer id="wings-v" src="" interaction-prompt="none"></model-viewer>
+    <model-viewer id="tail-v" src="" interaction-prompt="none"></model-viewer>
+    <model-viewer id="eyes-v" src="Griffin_LQ_Eyes_Mesh.glb" interaction-prompt="none" bounds="manual" camera-target="0m 0m 0m"></model-viewer>
 </div>
 <div class="sidebar">
     <h2>GRIFFIN SYSTEM</h2>
@@ -112,8 +112,11 @@
         for (let i = 0; i < data.length; i += 4) {
             const r = data[i], g = data[i+1], b = data[i+2];
             if (isEye) {
-                if (r > 100 && g > 80) { const lum = (r + g) / 510; data[i] = colors.eye.r * lum; data[i+1] = colors.eye.g * lum; data[i+2] = colors.eye.b * lum; }
-                else { data[i] = 0; data[i+1] = 0; data[i+2] = 0; }
+                // Strict: only yellow pixels (r and g high) take color. Red stays black.
+                if (r > 120 && g > 100) {
+                    const factor = (r + g) / 510;
+                    data[i] = colors.eye.r * factor; data[i+1] = colors.eye.g * factor; data[i+2] = colors.eye.b * factor;
+                } else { data[i] = 0; data[i+1] = 0; data[i+2] = 0; }
                 data[i+3] = 255;
             } else {
                 const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255; if (lum < 0.05) continue; 
@@ -134,9 +137,11 @@
         if (eyeViewer.model) { for (const mat of eyeViewer.model.materials) { const tex = await eyeViewer.createTexture(eyeBake); if (mat.pbrMetallicRoughness.baseColorTexture) mat.pbrMetallicRoughness.baseColorTexture.setTexture(tex); } }
     }
     function sync() {
+        if (!main.model) { requestAnimationFrame(sync); return; }
         const orbit = main.getCameraOrbit(), fov = main.getFieldOfView(), target = main.getCameraTarget();
         [...Object.values(parts), eyeViewer].forEach(v => {
             if(v.getAttribute('src')) {
+                // Ensure synchronization of viewpoint, rotation, and distance
                 v.cameraOrbit = `${orbit.theta}rad ${orbit.phi}rad ${orbit.radius}m`;
                 v.fieldOfView = `${fov}deg`;
                 v.cameraTarget = `${target.x}m ${target.y}m ${target.z}m`;
