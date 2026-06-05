@@ -7,18 +7,12 @@
     <style>
         body { margin: 0; background: #1a1a1a; color: #eee; font-family: 'Verdana', sans-serif; display: flex; flex-direction: column; height: 100vh; }
         header { padding: 10px; text-align: center; background: #222; border-bottom: 2px solid #ff9d00; }
-        
-        /* The 3D Window */
         model-viewer { flex: 1; width: 100%; background: radial-gradient(#333, #000); }
-
-        /* The Control Panel */
         .ui-panel { padding: 15px; background: #222; display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
         .group { border: 1px solid #444; padding: 10px; border-radius: 10px; background: #2d2d2d; }
         h4 { margin: 0 0 10px 0; font-size: 14px; color: #ff9d00; text-transform: uppercase; }
-        
         button { background: #444; color: white; border: 1px solid #666; padding: 8px 12px; cursor: pointer; border-radius: 5px; transition: 0.2s; }
-        button:hover { background: #ff9d00; color: black; border-color: white; }
-        button.active { background: #ff9d00; color: black; }
+        button:hover { background: #ff9d00; color: black; }
     </style>
 </head>
 <body>
@@ -28,14 +22,14 @@
 </header>
 
 <model-viewer id="griffin" 
-    src="Griffin_LQ_Body_Mesh.obj" 
+    src="Griffin_LQ_Body_Mesh.glb" 
     camera-controls 
     auto-rotate 
     shadow-intensity="1" 
     environment-image="neutral"
-    exposure="1.2">
+    exposure="1">
     
-    <model-viewer id="crest-layer" src="Crest_1.obj" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></model-viewer>
+    <model-viewer id="crest-layer" src="Crest_1.glb" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></model-viewer>
 </model-viewer>
 
 <div class="ui-panel">
@@ -59,14 +53,13 @@
     const griffinModel = document.querySelector('#griffin');
     const crestModel = document.querySelector('#crest-layer');
 
-    // Function to swap textures
     async function changePattern(fileName) {
+        // This ensures the pattern applies to the base griffin
         const material = griffinModel.model.materials[0];
         const texture = await griffinModel.createTexture(fileName);
         material.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
     }
 
-    // Function to hide/show the crest
     function toggleCrest(isVisible) {
         crestModel.style.display = isVisible ? "block" : "none";
     }
