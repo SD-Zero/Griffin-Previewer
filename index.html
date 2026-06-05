@@ -8,9 +8,25 @@
     <style>
         body { margin: 0; background: #1a1a1a; color: white; font-family: sans-serif; display: flex; height: 100vh; overflow: hidden; }
         .viewer-container { flex: 1; position: relative; background: radial-gradient(#333, #000); }
-        model-viewer { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
-        #griffin { z-index: 1; pointer-events: auto; }
-        #crest-v, #wings-v, #tail-v { z-index: 2; pointer-events: none; }
+        
+        model-viewer { 
+            width: 100%; 
+            height: 100%; 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            /* This removes the "picture slapping" effect by making backgrounds transparent */
+            background-color: transparent; 
+            --poster-color: transparent;
+        }
+
+        #griffin { z-index: 1; }
+        
+        /* These layers sit on top but "let clicks pass through" to the main griffin */
+        #crest-v, #wings-v, #tail-v { 
+            z-index: 2; 
+            pointer-events: none; 
+        }
 
         .sidebar { 
             width: 320px; background: #222; border-left: 2px solid #ff9d00; 
@@ -132,13 +148,13 @@
         updateMaterials();
     }
 
-    // Camera Sync
+    // This keeps all parts rotating together
     main.addEventListener('camera-change', () => {
-        const target = main.getCameraTarget();
+        const orbit = main.getCameraOrbit();
+        const fov = main.getFieldOfView();
         Object.values(parts).forEach(v => {
-            v.cameraOrbit = main.cameraOrbit;
-            v.fieldOfView = main.fieldOfView;
-            v.cameraTarget = `${target.x}m ${target.y}m ${target.z}m`;
+            v.cameraOrbit = `${orbit.theta}rad ${orbit.phi}rad ${orbit.radius}m`;
+            v.fieldOfView = `${fov}deg`;
         });
     });
 
@@ -147,7 +163,6 @@
         for (const v of viewers) {
             if (v.src && v.model) {
                 for (const mat of v.model.materials) {
-                    // Try to match "Material" (Blender default) OR "Griffin_Main"
                     if (mat.name === "Material" || mat.name === "Griffin_Main") {
                         const texture = await v.createTexture(currentPattern);
                         if (mat.pbrMetallicRoughness.baseColorTexture) {
@@ -183,7 +198,6 @@
         parts[type].addEventListener('model-visibility', () => updateMaterials(), { once: true });
     }
 
-    // Initial load sync
     main.addEventListener('model-visibility', () => updateMaterials());
 </script>
 
