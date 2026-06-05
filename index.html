@@ -138,23 +138,22 @@
         updateMaterials();
     }
 
-    // High-performance camera sync to stop "multiplying" lag
-    function syncCameras() {
+    // Forces immediate sync to prevent "multiplication" lag
+    function sync() {
         const orbit = main.getCameraOrbit();
         const fov = main.getFieldOfView();
         const target = main.getCameraTarget();
-        
         Object.values(parts).forEach(v => {
             v.cameraOrbit = `${orbit.theta}rad ${orbit.phi}rad ${orbit.radius}m`;
             v.fieldOfView = `${fov}deg`;
             v.cameraTarget = `${target.x}m ${target.y}m ${target.z}m`;
         });
-        requestAnimationFrame(syncCameras);
+        requestAnimationFrame(sync);
     }
-    main.addEventListener('poster-dismissed', syncCameras);
+    sync();
 
     async function updateMaterials() {
-        // Handle Body Texture
+        // Update Body
         if (main.model) {
             for (const mat of main.model.materials) {
                 if (mat.name === "Material" || mat.name === "Griffin_Main") {
@@ -163,19 +162,27 @@
                         mat.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
                     }
                 }
+                const rgb = hexToRgb(colors.primary);
+                mat.pbrMetallicRoughness.setBaseColorFactor([rgb.r/255, rgb.g/255, rgb.b/255, 1]);
             }
         }
 
-        // Apply Tints to everything (Body + Traits)
-        const viewers = [main, ...Object.values(parts)];
-        const rgb = hexToRgb(colors.primary);
-        viewers.forEach(v => {
-            if (v.model) {
-                v.model.materials.forEach(mat => {
+        // Update Traits and apply their specific textures
+        for (const [key, v] of Object.entries(parts)) {
+            if (v.src && v.model) {
+                for (const mat of v.model.materials) {
+                    // Re-apply trait-specific textures if they are missing
+                    const texFile = (key === 'wings') ? 'Griffin_Wings.png' : 'Griffin_Tails_Crests.png';
+                    const texture = await v.createTexture(texFile);
+                    if (mat.pbrMetallicRoughness.baseColorTexture) {
+                        mat.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
+                    }
+                    // Apply tint
+                    const rgb = hexToRgb(colors.primary);
                     mat.pbrMetallicRoughness.setBaseColorFactor([rgb.r/255, rgb.g/255, rgb.b/255, 1]);
-                });
+                }
             }
-        });
+        }
     }
 
     function hexToRgb(hex) {
@@ -197,10 +204,13 @@
 
     function changePart(type, file) {
         parts[type].src = file;
-        parts[type].addEventListener('model-visibility', () => updateMaterials(), { once: true });
+        // Small delay to ensure model is in memory before re-applying textures
+        parts[type].addEventListener('model-visibility', () => {
+            setTimeout(updateMaterials, 50);
+        }, { once: true });
     }
 
-    main.addEventListener('model-visibility', () => updateMaterials());
+    main.addEventListener('model-visibility', updateMaterials);
 </script>
 
 </body>
