@@ -128,36 +128,27 @@
         for (let i = 0; i < data.length; i += 4) {
             const r = data[i], g = data[i+1], b = data[i+2];
             const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-            
-            // Protect deepest shadows
             if (luminance < 0.05) continue; 
 
             let target = null;
             let intensity = 1.0;
 
-            // --- REFINED SEPARATION LOGIC ---
-            
-            // PRIMARY (RED)
-            // Checks if Red is dominant and significantly higher than G and B
+            // PRIMARY (RED) - Adjusted for slight darkening
             if (r > 60 && r > g * 1.3 && r > b * 1.3) {
                 target = colors.primary;
-                // Use the red channel itself as the intensity to preserve shading
                 intensity = r / 255;
-                // Boost for darker patterns, but keep it proportional
-                intensity = Math.pow(intensity, 0.7) * 1.2;
+                intensity = Math.pow(intensity, 0.85) * 1.05; // Tightened curve for depth
             }
-            // SECONDARY (YELLOW)
+            // SECONDARY (YELLOW) - Left alone as per feedback
             else if (r > 100 && g > 100 && b < 140) {
                 target = colors.secondary;
                 intensity = luminance / 0.9;
             }
-            // TERTIARY (BLUE / PINK / GREEN)
+            // TERTIARY (BLUE/PINK/GREEN) - Adjusted for slight darkening
             else if (b > 50 || (r > 100 && b > 100) || (g > 100 && r < 120)) {
                 target = colors.tertiary;
-                // Intensity check: if it's a "bright" blue/pink area, keep it bright
-                // if it's a "shaded" area, let the luminance dictate the darkness
                 intensity = Math.max(r, g, b) / 255;
-                intensity = Math.pow(intensity, 0.6) * 1.1;
+                intensity = Math.pow(intensity, 0.75) * 0.95; // Lowered multiplier for "slight" darkening
             }
 
             if (target) {
