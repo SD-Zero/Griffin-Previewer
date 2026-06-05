@@ -37,7 +37,11 @@
         /* COLOR SWATCHES */
         .swatch { 
             width: 100%; aspect-ratio: 1; border-radius: 3px; border: 1px solid #555; 
-            cursor: pointer; font-size: 0; /* hides text */
+            cursor: pointer; font-size: 0;
+            transition: transform 0.1s;
+        }
+        .swatch:hover { transform: scale(1.1); border-color: #fff; }
+        .swatch.active { border: 2px solid white; box-shadow: 0 0 5px #ff9d00; }
         }
         .random-btn { 
             grid-column: span 4; background: #444; color: #ff9d00; border: 1px solid #ff9d00;
