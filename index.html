@@ -15,6 +15,7 @@
         }
 
         #griffin { z-index: 1; }
+        /* Traits are forced to the background until they align */
         #crest-v, #wings-v, #tail-v { z-index: 2; pointer-events: none; visibility: hidden; }
 
         .sidebar { 
@@ -50,8 +51,8 @@
 
     <details open><summary>Patterns</summary><div class="button-stack">
         <button class="part-btn" onclick="changePattern('Griffin_Pattern00_HQ.png')">Drifter</button>
-        <button class="part-btn" onclick="changePattern('Griffin_Pattern01_HQ.png')">Duochrome</button>
-        <button class="part-btn" onclick="changePattern('Griffin_Pattern02_HQ.png')">Shining</button>
+        <button class="part-btn" onclick="changePattern('Griffin_Pattern02_HQ.png')">Duochrome</button>
+        <button class="part-btn" onclick="changePattern('Griffin_Pattern01_HQ.png')">Shining</button>
         <button class="part-btn" onclick="changePattern('Griffin_Pattern03_HQ.png')">Stealthy</button>
         <button class="part-btn" onclick="changePattern('Griffin_Pattern04_HQ.png')">Harfang</button>
     </div></details>
@@ -136,6 +137,7 @@
                 v.cameraOrbit = `${orbit.theta}rad ${orbit.phi}rad ${orbit.radius}m`;
                 v.fieldOfView = `${fov}deg`;
                 v.cameraTarget = `${target.x}m ${target.y}m ${target.z}m`;
+                // Force alignment snap
                 v.jumpCameraToGoal();
             }
         });
@@ -147,7 +149,6 @@
         if (main.model) {
             for (const mat of main.model.materials) {
                 const n = mat.name.toLowerCase();
-                // If the main file contains traits, hide them by making them invisible
                 if (n.includes("wing") || n.includes("tail") || n.includes("crest")) {
                     mat.setAlphaMode("BLEND");
                     mat.pbrMetallicRoughness.setBaseColorFactor([0,0,0,0]);
@@ -164,12 +165,12 @@
             if (v.getAttribute('src') && v.model) {
                 for (const mat of v.model.materials) {
                     const n = mat.name.toLowerCase();
-                    // FORCE HIDE the extra griffin body inside the trait file
+                    // Kill the "Ghost Griffin" inside the trait file
                     if (n.includes("griffin") || n.includes("body") || n.includes("main")) {
                         mat.setAlphaMode("BLEND");
                         mat.pbrMetallicRoughness.setBaseColorFactor([0,0,0,0]);
                     } 
-                    // Only texture the part that matches the viewer (e.g. 'wing' for 'wings-v')
+                    // Use key-specific materials only
                     else if (n.includes(key.substring(0,3))) {
                         const texFile = (key === 'wings') ? 'Griffin_Wings.png' : 'Griffin_Tails_Crests.png';
                         const texture = await v.createTexture(texFile);
