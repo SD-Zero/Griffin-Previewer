@@ -111,18 +111,24 @@
         ctx.putImageData(imageData, 0, 0); return canvas.toDataURL();
     }
 
+    // New visibility logic using the scene graph
     function toggleEyes(meshToShow) {
         if (!main.model) return;
-        const normalMesh = main.model.nodes.find(node => node.name === 'Mesh_Eyes_Normal');
-        const lashMesh = main.model.nodes.find(node => node.name === 'Mesh_Eyes_Lashes');
         
-        if (meshToShow === 'Mesh_Eyes_Normal') {
-            if (normalMesh) normalMesh.isVisible = true;
-            if (lashMesh) lashMesh.isVisible = false;
-        } else {
-            if (normalMesh) normalMesh.isVisible = false;
-            if (lashMesh) lashMesh.isVisible = true;
-        }
+        // This is a direct check for the Three.js object inside model-viewer
+        const scene = main.getScene(); // Access internal Three.js scene
+        if(!scene) return;
+
+        scene.traverse((object) => {
+            if (object.isMesh || object.isGroup) {
+                if (object.name === 'Mesh_Eyes_Normal') {
+                    object.visible = (meshToShow === 'Mesh_Eyes_Normal');
+                }
+                if (object.name === 'Mesh_Eyes_Lashes') {
+                    object.visible = (meshToShow === 'Mesh_Eyes_Lashes');
+                }
+            }
+        });
     }
 
     async function updateAll() {
@@ -142,12 +148,9 @@
             }
         }
         
-        // Initial state: Show Normal, Hide Lashes
-        const normalMesh = main.model.nodes.find(node => node.name === 'Mesh_Eyes_Normal');
-        const lashMesh = main.model.nodes.find(node => node.name === 'Mesh_Eyes_Lashes');
-        if (normalMesh && lashMesh && !window.eyesInitialized) {
-            normalMesh.isVisible = true;
-            lashMesh.isVisible = false;
+        // Force Normal Eyes on first load
+        if (!window.eyesInitialized) {
+            toggleEyes('Mesh_Eyes_Normal');
             window.eyesInitialized = true;
         }
     }
