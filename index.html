@@ -136,15 +136,23 @@
                 data[i+3] = 255;
             } else {
                 const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-                if (lum < 0.03) continue; // Skip near-blacks
+                if (lum < 0.03) continue;
                 
                 let target = null;
-                // Red (Primary)
-                if (r > 60 && r > g * 1.2 && r > b * 1.2) target = colors.primary;
-                // Green/Neon (Secondary) - Aggressive check for high Green
-                else if (g > 70 && g > r * 1.1) target = colors.secondary;
-                // Blue/Cyan (Tertiary)
-                else if (b > 50 || (r > 100 && b > 100)) target = colors.tertiary;
+                
+                // 1. Primary Red (Must be very red, not yellow-red)
+                if (r > 60 && r > g * 1.5 && r > b * 1.5) {
+                    target = colors.primary;
+                }
+                // 2. Secondary (Catch BOTH Yellow and Neon Green)
+                // Yellow = High Red + High Green. Green = High Green + Low Red.
+                else if (g > 70 && ( (r > 70) || (g > r * 1.1) ) && b < 170) {
+                    target = colors.secondary;
+                }
+                // 3. Tertiary (Blue/Purple)
+                else if (b > 50 || (r > 100 && b > 100)) {
+                    target = colors.tertiary;
+                }
                 
                 if (target) { data[i] = target.r; data[i+1] = target.g; data[i+2] = target.b; }
             }
