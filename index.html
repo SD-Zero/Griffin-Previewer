@@ -10,7 +10,7 @@
         header { padding: 10px; background: #222; text-align: center; border-bottom: 2px solid #ff9d00; }
         .viewer-container { flex: 1; position: relative; background: radial-gradient(#333, #000); }
         
-        /* This stacks them perfectly */
+        /* Stack the layers */
         model-viewer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         #crest-layer { pointer-events: none; } 
         
@@ -37,7 +37,8 @@
     <model-viewer id="crest-layer" 
         src="Crest_1.glb" 
         exposure="1.2"
-        interaction-prompt="none">
+        interaction-prompt="none"
+        center-model="false"> 
     </model-viewer>
 </div>
 
@@ -59,12 +60,11 @@
     const main = document.querySelector('#griffin');
     const crest = document.querySelector('#crest-layer');
 
-    // THE MAGIC SYNC
-    // This ensures the crest uses the same camera math as the body
+    // This makes the crest follow the body exactly
     const sync = () => {
         crest.cameraOrbit = main.cameraOrbit;
         crest.fieldOfView = main.fieldOfView;
-        // We do NOT use 'bounds="tight"' on the crest so it stays in its original AJ position
+        crest.cameraTarget = main.cameraTarget;
     };
 
     main.addEventListener('camera-change', sync);
