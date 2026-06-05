@@ -8,20 +8,18 @@
     <style>
         body { margin: 0; background: #1a1a1a; color: white; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         header { padding: 10px; background: #222; text-align: center; border-bottom: 2px solid #ff9d00; }
-        #status-bar { background: #2ecc71; color: black; padding: 5px; font-size: 12px; font-weight: bold; text-align: center; }
         .viewer-container { flex: 1; position: relative; background: radial-gradient(#333, #000); }
-        model-viewer { width: 100%; height: 100%; }
-        .ui-panel { padding: 15px; background: #222; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; overflow-y: auto; max-height: 40vh; }
+        model-viewer { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+        .ui-panel { padding: 15px; background: #222; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; overflow-y: auto; max-height: 40vh; z-index: 10; }
         .group { border: 1px solid #444; padding: 10px; border-radius: 10px; background: #2d2d2d; text-align: center; }
         h4 { margin: 0 0 10px 0; font-size: 12px; color: #ff9d00; text-transform: uppercase; }
-        button { background: #444; color: white; border: 1px solid #666; padding: 10px 15px; cursor: pointer; border-radius: 5px; font-size: 14px; }
+        button { background: #444; color: white; border: 1px solid #666; padding: 10px 15px; cursor: pointer; border-radius: 5px; }
         button:active { background: #ff9d00; color: black; }
     </style>
 </head>
 <body>
 
 <header><h2 style="margin:0;">Griffin Previewer</h2></header>
-<div id="status-bar">SYSTEM ONLINE</div>
 
 <div class="viewer-container">
     <model-viewer id="griffin" 
@@ -29,26 +27,22 @@
         camera-controls 
         auto-rotate 
         bounds="tight"
-        exposure="1.2"
-        shadow-intensity="1">
+        exposure="1.2">
         
         <model-viewer id="crest-layer" 
             src="Crest_1.glb" 
-            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;">
+            style="width: 100%; height: 100%; pointer-events: none;">
         </model-viewer>
     </model-viewer>
 </div>
 
 <div class="ui-panel">
     <div class="group">
-        <h4>Body Patterns</h4>
+        <h4>Patterns</h4>
         <button onclick="changePattern('Griffin_Pattern00_HQ.png')">00</button>
         <button onclick="changePattern('Griffin_Pattern01_HQ.png')">01</button>
         <button onclick="changePattern('Griffin_Pattern02_HQ.png')">02</button>
-        <button onclick="changePattern('Griffin_Pattern03_HQ.png')">03</button>
-        <button onclick="changePattern('Griffin_Pattern04_HQ.png')">04</button>
     </div>
-
     <div class="group">
         <h4>Head Piece</h4>
         <button onclick="toggleCrest(true)">Show Crest</button>
@@ -60,14 +54,23 @@
     const viewer = document.querySelector('#griffin');
     const crest = document.querySelector('#crest-layer');
 
+    // SYNC MOVEMENT: This forces the crest to follow the griffin's rotation
+    viewer.addEventListener('camera-change', () => {
+        crest.cameraOrbit = viewer.cameraOrbit;
+        crest.fieldOfView = viewer.fieldOfView;
+    });
+
     async function changePattern(fileName) {
         if (!viewer.model) return;
-        const material = viewer.model.materials[0];
-        // This line loads the PNG onto the 3D model
+        
+        // This targets ALL materials on the model to fix the "globby" issue
         const texture = await viewer.createTexture(fileName);
-        if (material.pbrMetallicRoughness && material.pbrMetallicRoughness.baseColorTexture) {
-            material.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
-        }
+        
+        viewer.model.materials.forEach(mat => {
+            if (mat.pbrMetallicRoughness && mat.pbrMetallicRoughness.baseColorTexture) {
+                mat.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
+            }
+        });
     }
 
     function toggleCrest(show) {
