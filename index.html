@@ -91,11 +91,7 @@
 
     const main = document.querySelector('#griffin');
     const parts = { crest: document.querySelector('#crest-v'), wings: document.querySelector('#wings-v'), tail: document.querySelector('#tail-v') };
-    let colors = { 
-        primary: {r:255, g:255, b:255}, 
-        secondary: {r:255, g:255, b:255}, 
-        tertiary: {r:255, g:255, b:255} 
-    };
+    let colors = { primary: {r:255, g:255, b:255}, secondary: {r:255, g:255, b:255}, tertiary: {r:255, g:255, b:255} };
     let currentPattern = 'Griffin_Pattern00_HQ.png';
 
     ["primary", "secondary", "tertiary"].forEach(type => {
@@ -131,38 +127,44 @@
 
         for (let i = 0; i < data.length; i += 4) {
             const r = data[i], g = data[i+1], b = data[i+2];
-            const brightness = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
             
-            // BEAK PROTECTION: Still skipping extremely deep shadows to keep the 3D look
-            if (brightness < 0.08) continue; 
+            // Protect deepest shadows
+            if (luminance < 0.05) continue; 
 
             let target = null;
-            let refB = 1.0;
+            let intensity = 1.0;
 
-            // 1. IMPROVED DETECTION (Looser thresholds to catch stray pixels)
-            // PRIMARY (Red areas like the beak spot)
-            if (r > 70 && g < 120 && b < 120 && r > g && r > b) { 
-                target = colors.primary; 
-                refB = brightness / 0.5; // Normalizing against mid-red
+            // --- REFINED SEPARATION LOGIC ---
+            
+            // PRIMARY (RED)
+            // Checks if Red is dominant and significantly higher than G and B
+            if (r > 60 && r > g * 1.3 && r > b * 1.3) {
+                target = colors.primary;
+                // Use the red channel itself as the intensity to preserve shading
+                intensity = r / 255;
+                // Boost for darker patterns, but keep it proportional
+                intensity = Math.pow(intensity, 0.7) * 1.2;
             }
-            // SECONDARY (Yellow areas)
-            else if (r > 100 && g > 100 && b < 120) { 
-                target = colors.secondary; 
-                refB = brightness / 0.85; 
+            // SECONDARY (YELLOW)
+            else if (r > 100 && g > 100 && b < 140) {
+                target = colors.secondary;
+                intensity = luminance / 0.9;
             }
-            // TERTIARY (Blue/Pink/Nose Swirls)
-            else if (b > 60 || (r > 80 && b > 80) || (g > 80 && r < 100)) { 
-                target = colors.tertiary; 
-                // NOSE FIX: Use a lower reference for blue areas so they stay darkened/shaded correctly
-                refB = brightness / 0.6;
+            // TERTIARY (BLUE / PINK / GREEN)
+            else if (b > 50 || (r > 100 && b > 100) || (g > 100 && r < 120)) {
+                target = colors.tertiary;
+                // Intensity check: if it's a "bright" blue/pink area, keep it bright
+                // if it's a "shaded" area, let the luminance dictate the darkness
+                intensity = Math.max(r, g, b) / 255;
+                intensity = Math.pow(intensity, 0.6) * 1.1;
             }
 
             if (target) {
-                // Clamp intensity so it doesn't get too neon unless the swatch is
-                const finalInt = Math.min(refB, 1.1);
-                data[i] = target.r * finalInt;
-                data[i+1] = target.g * finalInt;
-                data[i+2] = target.b * finalInt;
+                const finalFactor = Math.min(intensity, 1.1);
+                data[i] = target.r * finalFactor;
+                data[i+1] = target.g * finalFactor;
+                data[i+2] = target.b * finalFactor;
             }
         }
         ctx.putImageData(imageData, 0, 0);
