@@ -3,103 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Griffin Previewer</title>
+    <title>Griffin Previewer - Full Options</title>
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <style>
         body { margin: 0; background: #1a1a1a; color: white; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         header { padding: 10px; background: #222; text-align: center; border-bottom: 2px solid #ff9d00; }
         .viewer-container { flex: 1; position: relative; background: radial-gradient(#333, #000); }
         
-        /* The Base Griffin */
-        #griffin { width: 100%; height: 100%; position: absolute; z-index: 1; }
+        /* Layering the 3D viewers */
+        model-viewer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        #griffin { pointer-events: auto; } /* Only the body allows touch rotation */
+
+        .ui-panel { padding: 15px; background: #222; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; max-height: 45vh; border-top: 2px solid #444; }
+        .group { border: 1px solid #444; padding: 10px; border-radius: 10px; background: #2d2d2d; }
+        h4 { margin: 0 0 10px 0; font-size: 11px; color: #ff9d00; text-transform: uppercase; letter-spacing: 1px; }
+        .button-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; }
         
-        /* The Crest - Forced to be small and ignore user touch */
-        #crest-layer { 
-            width: 100%; height: 100%; 
-            position: absolute; top: 0; left: 0; 
-            pointer-events: none; 
-            z-index: 2;
-        }
-        
-        .ui-panel { padding: 15px; background: #222; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; z-index: 100; }
-        .group { border: 1px solid #444; padding: 10px; border-radius: 10px; background: #2d2d2d; text-align: center; }
-        button { background: #444; color: white; border: 1px solid #666; padding: 10px; border-radius: 5px; }
+        button { background: #444; color: white; border: 1px solid #666; padding: 8px; cursor: pointer; border-radius: 4px; font-size: 12px; }
+        button:active, button.active { background: #ff9d00; color: black; border-color: #fff; }
     </style>
 </head>
 <body>
 
-<header><h2 style="margin:0;">Griffin Previewer</h2></header>
+<header><h2 style="margin:0; font-size: 18px;">Griffin Previewer</h2></header>
 
 <div class="viewer-container">
-    <model-viewer id="griffin" 
-        src="Griffin_LQ_Body_Mesh.glb" 
-        camera-controls 
-        auto-rotate 
-        bounds="tight" 
-        exposure="1.2">
-    </model-viewer>
-
-    <model-viewer id="crest-layer" 
-        src="Crest_1.glb" 
-        exposure="1.2"
-        interaction-prompt="none"
-        loading="eager"
-        center-model="false">
-    </model-viewer>
+    <model-viewer id="griffin" src="Griffin_LQ_Body_Mesh.glb" camera-controls auto-rotate bounds="tight" exposure="1.2"></model-viewer>
+    <model-viewer id="crest-v" src="" exposure="1.2" center-model="false"></model-viewer>
+    <model-viewer id="wings-v" src="" exposure="1.2" center-model="false"></model-viewer>
+    <model-viewer id="tail-v" src="" exposure="1.2" center-model="false"></model-viewer>
 </div>
 
 <div class="ui-panel">
     <div class="group">
-        <h4>Patterns</h4>
-        <button onclick="applyAll('Griffin_Pattern00_HQ.png')">00</button>
-        <button onclick="applyAll('Griffin_Pattern01_HQ.png')">01</button>
-        <button onclick="applyAll('Griffin_Pattern02_HQ.png')">02</button>
+        <h4>Body Patterns</h4>
+        <div class="button-grid">
+            <button onclick="changePattern('Griffin_Pattern00_HQ.png')">Drifter</button>
+            <button onclick="changePattern('Griffin_Pattern01_HQ.png')">Duochrome</button>
+            <button onclick="changePattern('Griffin_Pattern02_HQ.png')">Shining</button>
+            <button onclick="changePattern('Griffin_Pattern03_HQ.png')">Stealthy</button>
+            <button onclick="changePattern('Griffin_Pattern04_HQ.png')">Harfang</button>
+        </div>
     </div>
+
     <div class="group">
-        <h4>Crest Scale</h4>
-        <button onclick="adjustCrest(0.1)">Small</button>
-        <button onclick="adjustCrest(1.0)">Normal</button>
-        <button onclick="adjustCrest(2.0)">Large</button>
+        <h4>Crest Type</h4>
+        <div class="button-grid">
+            <button onclick="changePart('crest', 'Bestial_Crest.glb')">Bestial</button>
+            <button onclick="changePart('crest', 'Pinnacle_Crest.glb')">Pinnacle</button>
+            <button onclick="changePart('crest', 'Windswept_Crest.glb')">Windswept</button>
+            <button onclick="changePart('crest', 'Harpy_Crest.glb')">Harpy</button>
+            <button onclick="changePart('crest', '')">None</button>
+        </div>
+    </div>
+
+    <div class="group">
+        <h4>Wing Type</h4>
+        <div class="button-grid">
+            <button onclick="changePart('wings', 'Heroic_Wings.glb')">Heroic</button>
+            <button onclick="changePart('wings', 'Osprey_Wings.glb')">Osprey</button>
+            <button onclick="changePart('wings', 'Manticore_Wings.glb')">Manticore</button>
+            <button onclick="changePart('wings', 'Scarab_Wings.glb')">Scarab</button>
+            <button onclick="changePart('wings', 'Seraph_Wings.glb')">Seraph</button>
+            <button onclick="changePart('wings', '')">None</button>
+        </div>
+    </div>
+
+    <div class="group">
+        <h4>Tail Type</h4>
+        <div class="button-grid">
+            <button onclick="changePart('tail', 'Fanned_Tail.glb')">Fanned</button>
+            <button onclick="changePart('tail', 'Quetzal_Tail.glb')">Quetzal</button>
+            <button onclick="changePart('tail', 'Svelte_Tail.glb')">Svelte</button>
+            <button onclick="changePart('tail', 'Tufted_Tail.glb')">Tufted</button>
+            <button onclick="changePart('tail', 'Scorpio_Tail.glb')">Scorpio</button>
+        </div>
     </div>
 </div>
 
 <script>
     const main = document.querySelector('#griffin');
-    const crest = document.querySelector('#crest-layer');
+    const crestV = document.querySelector('#crest-v');
+    const wingsV = document.querySelector('#wings-v');
+    const tailV = document.querySelector('#tail-v');
+    
+    let currentPattern = 'Griffin_Pattern00_HQ.png';
 
-    // Force sync and force scale
-    const sync = () => {
-        crest.cameraOrbit = main.cameraOrbit;
-        crest.fieldOfView = main.fieldOfView;
-        
+    // Sync all cameras to the main body
+    main.addEventListener('camera-change', () => {
+        const orbit = main.cameraOrbit;
+        const fov = main.fieldOfView;
         const target = main.getCameraTarget();
-        crest.cameraTarget = `${target.x}m ${target.y}m ${target.z}m`;
-    };
+        
+        [crestV, wingsV, tailV].forEach(v => {
+            v.cameraOrbit = orbit;
+            v.fieldOfView = fov;
+            v.cameraTarget = `${target.x}m ${target.y}m ${target.z}m`;
+        });
+    });
 
-    main.addEventListener('camera-change', sync);
-
-    // This manually shrinks the Crest if it's too big
-    function adjustCrest(s) {
-        crest.scale = `${s} ${s} ${s}`;
+    async function changePattern(fileName) {
+        currentPattern = fileName;
+        applyPatternToAll();
     }
 
-    async function applyAll(img) {
-        const texture = await main.createTexture(img);
-        [main, crest].forEach(v => {
-            if (v.model) {
+    function changePart(type, file) {
+        const target = document.querySelector(`#${type}-v`);
+        target.src = file;
+        // Re-apply pattern to the new part once it loads
+        target.addEventListener('load', () => applyPatternToAll(), { once: true });
+    }
+
+    async function applyPatternToAll() {
+        const viewers = [main, crestV, wingsV, tailV];
+        for (const v of viewers) {
+            if (v.src && v.model) {
+                const texture = await v.createTexture(currentPattern);
                 v.model.materials.forEach(mat => {
                     if (mat.pbrMetallicRoughness.baseColorTexture) {
                         mat.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
                     }
                 });
             }
-        });
+        }
     }
-
-    // Set a default small scale on load
-    crest.addEventListener('load', () => {
-        crest.scale = "1 1 1"; // Start at 1, change if still huge
-    });
 </script>
 
 </body>
