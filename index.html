@@ -8,12 +8,8 @@
     <style>
         body { margin: 0; background: #1a1a1a; color: white; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         header { padding: 10px; background: #222; text-align: center; border-bottom: 2px solid #ff9d00; }
-        .viewer-container { flex: 1; position: relative; background: radial-gradient(#333, #000); }
-        
-        /* Stack the layers */
-        model-viewer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-        #crest-layer { pointer-events: none; } 
-        
+        .viewer-container { flex: 1; background: radial-gradient(#333, #000); position: relative; }
+        model-viewer { width: 100%; height: 100%; }
         .ui-panel { padding: 15px; background: #222; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; z-index: 100; }
         .group { border: 1px solid #444; padding: 10px; border-radius: 10px; background: #2d2d2d; text-align: center; }
         h4 { margin: 0 0 10px 0; font-size: 12px; color: #ff9d00; text-transform: uppercase; }
@@ -33,13 +29,6 @@
         bounds="tight" 
         exposure="1.2">
     </model-viewer>
-
-    <model-viewer id="crest-layer" 
-        src="Crest_1.glb" 
-        exposure="1.2"
-        interaction-prompt="none"
-        center-model="false"> 
-    </model-viewer>
 </div>
 
 <div class="ui-panel">
@@ -50,41 +39,62 @@
         <button onclick="applyAll('Griffin_Pattern02_HQ.png')">02</button>
     </div>
     <div class="group">
-        <h4>Toggle</h4>
-        <button onclick="toggleCrest(true)">Crest On</button>
-        <button onclick="toggleCrest(false)">Crest Off</button>
+        <h4>Head Piece</h4>
+        <button id="crestBtn" onclick="toggleCrest()">Add Crest</button>
     </div>
 </div>
 
 <script>
-    const main = document.querySelector('#griffin');
-    const crest = document.querySelector('#crest-layer');
+    const viewer = document.querySelector('#griffin');
+    let crestActive = false;
 
-    // This makes the crest follow the body exactly
-    const sync = () => {
-        crest.cameraOrbit = main.cameraOrbit;
-        crest.fieldOfView = main.fieldOfView;
-        crest.cameraTarget = main.cameraTarget;
-    };
-
-    main.addEventListener('camera-change', sync);
-
-    async function applyAll(img) {
-        if (main.model) applyToModel(main, img);
-        if (crest.model) applyToModel(crest, img);
+    // This function adds or removes the crest INSIDE the same 3D scene
+    async function toggleCrest() {
+        const btn = document.querySelector('#crestBtn');
+        
+        if (!crestActive) {
+            // Create a "hotspot" that is actually the 3D model
+            const crest = document.createElement('model-viewer');
+            crest.id = "crest-internal";
+            crest.src = "Crest_1.glb";
+            crest.style.width = "100%";
+            crest.style.height = "100%";
+            crest.style.position = "absolute";
+            crest.style.pointerEvents = "none";
+            // Important: we don't give it camera controls, it just sits there
+            viewer.appendChild(crest);
+            
+            btn.innerText = "Remove Crest";
+            crestActive = true;
+        } else {
+            const el = document.querySelector('#crest-internal');
+            if (el) el.remove();
+            btn.innerText = "Add Crest";
+            crestActive = false;
+        }
     }
 
-    async function applyToModel(target, img) {
-        const texture = await target.createTexture(img);
-        target.model.materials.forEach(mat => {
+    async function applyAll(img) {
+        if (!viewer.model) return;
+        
+        const texture = await viewer.createTexture(img);
+        
+        // Apply to Body
+        viewer.model.materials.forEach(mat => {
             if (mat.pbrMetallicRoughness.baseColorTexture) {
                 mat.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
             }
         });
-    }
 
-    function toggleCrest(show) {
-        crest.style.display = show ? "block" : "none";
+        // Apply to Crest if it exists
+        const crestEl = document.querySelector('#crest-internal');
+        if (crestEl && crestEl.model) {
+            crestEl.model.materials.forEach(mat => {
+                if (mat.pbrMetallicRoughness.baseColorTexture) {
+                    mat.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
+                }
+            });
+        }
     }
 </script>
 
