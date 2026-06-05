@@ -8,15 +8,23 @@
     <style>
         body { margin: 0; background: #1a1a1a; color: white; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         header { padding: 10px; background: #222; text-align: center; border-bottom: 2px solid #ff9d00; }
-        .viewer-container { flex: 1; position: relative; background: radial-gradient(#333, #000); }
+        .viewer-container { flex: 1; position: relative; background: radial-gradient(#333, #000); overflow: hidden; }
         
-        /* This stacks the two viewers perfectly */
-        model-viewer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-        #crest-layer { pointer-events: none; } 
+        /* The Base Griffin */
+        #griffin { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
+        
+        /* The Crest Layer - We disable auto-centering and zoom */
+        #crest-layer { 
+            width: 100%; height: 100%; 
+            position: absolute; top: 0; left: 0; 
+            pointer-events: none; 
+            z-index: 2;
+        }
         
         .ui-panel { padding: 15px; background: #222; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; z-index: 100; }
         .group { border: 1px solid #444; padding: 10px; border-radius: 10px; background: #2d2d2d; text-align: center; }
         button { background: #444; color: white; border: 1px solid #666; padding: 10px; border-radius: 5px; }
+        button:active { background: #ff9d00; color: black; }
     </style>
 </head>
 <body>
@@ -35,7 +43,9 @@
     <model-viewer id="crest-layer" 
         src="Crest_1.glb" 
         exposure="1.2"
-        interaction-prompt="none">
+        interaction-prompt="none"
+        loading="eager"
+        auto-rotate-delay="0">
     </model-viewer>
 </div>
 
@@ -57,24 +67,32 @@
     const main = document.querySelector('#griffin');
     const crest = document.querySelector('#crest-layer');
 
-    // This is the "Magic Sync"
-    // It forces the crest viewer to use the EXACT same camera math as the griffin
-    const syncCameras = () => {
+    // This is a more aggressive sync
+    const sync = () => {
+        // We force the crest to use the EXACT orbital values of the main model
         crest.cameraOrbit = main.cameraOrbit;
         crest.fieldOfView = main.fieldOfView;
         
-        // This line is the key: it forces the 'eye' of the crest camera 
-        // to stay centered on the griffin's body
-        crest.cameraTarget = main.getCameraTarget();
+        // We calculate the target so the 'center' of the crest's view 
+        // is actually the center of the griffin
+        const target = main.getCameraTarget();
+        crest.cameraTarget = `${target.x}m ${target.y}m ${target.z}m`;
     };
 
-    main.addEventListener('camera-change', syncCameras);
+    main.addEventListener('camera-change', sync);
+    
+    // Also sync the auto-rotation
+    setInterval(() => {
+        if(main.autoRotate) {
+            crest.cameraOrbit = main.cameraOrbit;
+        }
+    }, 16);
 
     async function applyAll(img) {
         const texture = await main.createTexture(img);
-        [main, crest].forEach(viewer => {
-            if (viewer.model) {
-                viewer.model.materials.forEach(mat => {
+        [main, crest].forEach(v => {
+            if (v.model) {
+                v.model.materials.forEach(mat => {
                     if (mat.pbrMetallicRoughness.baseColorTexture) {
                         mat.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
                     }
@@ -84,7 +102,7 @@
     }
 
     function toggleCrest(show) {
-        crest.style.display = show ? "block" : "none";
+        crest.style.visibility = show ? "visible" : "hidden";
     }
 </script>
 
