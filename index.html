@@ -15,18 +15,12 @@
             position: absolute; 
             top: 0; 
             left: 0; 
-            /* This removes the "picture slapping" effect by making backgrounds transparent */
             background-color: transparent; 
             --poster-color: transparent;
         }
 
         #griffin { z-index: 1; }
-        
-        /* These layers sit on top but "let clicks pass through" to the main griffin */
-        #crest-v, #wings-v, #tail-v { 
-            z-index: 2; 
-            pointer-events: none; 
-        }
+        #crest-v, #wings-v, #tail-v { z-index: 2; pointer-events: none; }
 
         .sidebar { 
             width: 320px; background: #222; border-left: 2px solid #ff9d00; 
@@ -55,9 +49,9 @@
 <div class="viewer-container">
     <model-viewer id="griffin" src="griffin.glb" camera-controls auto-rotate interaction-prompt="none" shadow-intensity="1" exposure="1.2"></model-viewer>
     
-    <model-viewer id="crest-v" src="bestial.glb" interaction-prompt="none" center-model="false"></model-viewer>
-    <model-viewer id="wings-v" src="manticore.glb" interaction-prompt="none" center-model="false"></model-viewer>
-    <model-viewer id="tail-v" src="fanned.glb" interaction-prompt="none" center-model="false"></model-viewer>
+    <model-viewer id="crest-v" src="bestial.glb" interaction-prompt="none"></model-viewer>
+    <model-viewer id="wings-v" src="manticore.glb" interaction-prompt="none"></model-viewer>
+    <model-viewer id="tail-v" src="fanned.glb" interaction-prompt="none"></model-viewer>
 </div>
 
 <div class="sidebar">
@@ -142,13 +136,9 @@
 
     function setColor(type, hex, element) {
         colors[type] = hex;
-        const container = element.parentElement;
-        container.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
-        element.classList.add('active');
         updateMaterials();
     }
 
-    // This keeps all parts rotating together
     main.addEventListener('camera-change', () => {
         const orbit = main.getCameraOrbit();
         const fov = main.getFieldOfView();
@@ -163,12 +153,14 @@
         for (const v of viewers) {
             if (v.src && v.model) {
                 for (const mat of v.model.materials) {
+                    // ONLY swap texture if it's the main body material
                     if (mat.name === "Material" || mat.name === "Griffin_Main") {
                         const texture = await v.createTexture(currentPattern);
                         if (mat.pbrMetallicRoughness.baseColorTexture) {
                             mat.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
                         }
                     }
+                    // Apply color factor to all materials
                     const rgb = hexToRgb(colors.primary);
                     mat.pbrMetallicRoughness.setBaseColorFactor([rgb.r/255, rgb.g/255, rgb.b/255, 1]);
                 }
