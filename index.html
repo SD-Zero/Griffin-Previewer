@@ -9,6 +9,7 @@
         body { margin: 0; background: #111; color: white; font-family: sans-serif; display: flex; height: 100vh; overflow: hidden; }
         .viewer-container { flex: 1; position: relative; background: radial-gradient(#333, #000); }
         
+        /* EXACT same setup for all viewers */
         model-viewer { 
             width: 100%; 
             height: 100%; 
@@ -20,7 +21,6 @@
 
         #griffin { z-index: 1; }
         #crest-v, #wings-v, #tail-v { z-index: 2; pointer-events: none; visibility: hidden; }
-        /* The eye layer must perfectly mirror the body layer */
         #eyes-v { z-index: 3; pointer-events: none; }
 
         .sidebar { width: 320px; background: #222; border-left: 2px solid #ff9d00; display: flex; flex-direction: column; overflow-y: auto; padding: 10px; }
@@ -41,10 +41,12 @@
 
 <div class="viewer-container">
     <model-viewer id="griffin" src="griffin.glb" camera-controls auto-rotate interaction-prompt="none" shadow-intensity="1" exposure="1.2" environment-image="neutral"></model-viewer>
-    <model-viewer id="crest-v" src="" interaction-prompt="none"></model-viewer>
-    <model-viewer id="wings-v" src="" interaction-prompt="none"></model-viewer>
-    <model-viewer id="tail-v" src="" interaction-prompt="none"></model-viewer>
-    <model-viewer id="eyes-v" src="Griffin_LQ_Eyes_Mesh.glb" interaction-prompt="none"></model-viewer>
+    
+    <model-viewer id="crest-v" src="" interaction-prompt="none" shadow-intensity="1" exposure="1.2" environment-image="neutral"></model-viewer>
+    <model-viewer id="wings-v" src="" interaction-prompt="none" shadow-intensity="1" exposure="1.2" environment-image="neutral"></model-viewer>
+    <model-viewer id="tail-v" src="" interaction-prompt="none" shadow-intensity="1" exposure="1.2" environment-image="neutral"></model-viewer>
+    
+    <model-viewer id="eyes-v" src="Griffin_LQ_Eyes_Mesh.glb" interaction-prompt="none" shadow-intensity="1" exposure="1.2" environment-image="neutral"></model-viewer>
 </div>
 
 <div class="sidebar">
@@ -169,15 +171,10 @@
             const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
             
             if (isEye) {
-                // PRESERVE BLACK AREAS: Only tint if there is actual brightness in the eye texture
-                if (luminance > 0.1) {
-                    data[i] = colors.eye.r * luminance;
-                    data[i+1] = colors.eye.g * luminance;
-                    data[i+2] = colors.eye.b * luminance;
-                } else {
-                    // Force near-black areas of the TEXTURE to stay black
-                    data[i] = 0; data[i+1] = 0; data[i+2] = 0;
-                }
+                // TINT ONLY: The eye mesh is already black. This only colors the texture shape.
+                data[i] = colors.eye.r * (r / 255);
+                data[i+1] = colors.eye.g * (g / 255);
+                data[i+2] = colors.eye.b * (b / 255);
             } else {
                 if (luminance < 0.05) continue; 
                 let target = null;
@@ -203,6 +200,7 @@
     }
 
     async function updateAll() {
+        // Body Texture Update
         const bodyBake = await processTexture(currentPattern);
         if (main.model) {
             for (const mat of main.model.materials) {
@@ -217,6 +215,7 @@
             }
         }
         
+        // Parts Texture Update
         for (const [key, v] of Object.entries(parts)) {
             if (v.getAttribute('src') && v.model) {
                 const raw = (key === 'wings') ? 'Griffin_Wings.png' : 'Griffin_Tails_Crests.png';
@@ -234,11 +233,10 @@
             }
         }
 
+        // Eye Texture Update
         const eyeBake = await processTexture(currentEyeShape, true);
         if (eyeViewer.model) {
             for (const mat of eyeViewer.model.materials) {
-                // Ensure model material doesn't "glow" or override our texture color
-                mat.pbrMetallicRoughness.setBaseColorFactor([1,1,1,1]);
                 const tex = await eyeViewer.createTexture(eyeBake);
                 if (mat.pbrMetallicRoughness.baseColorTexture) mat.pbrMetallicRoughness.baseColorTexture.setTexture(tex);
             }
@@ -247,11 +245,7 @@
 
     function changeEyeModel(file) {
         eyeViewer.setAttribute('src', file);
-        eyeViewer.addEventListener('model-visibility', () => {
-            // FIX: Force eye model to reset its framing so it doesn't zoom
-            eyeViewer.jumpCameraToGoal();
-            updateAll();
-        }, { once: true });
+        eyeViewer.addEventListener('model-visibility', () => updateAll(), { once: true });
     }
 
     function changeEyeShape(file) {
@@ -264,6 +258,7 @@
         return { r: Math.round(f(0) * 255), g: Math.round(f(8) * 255), b: Math.round(f(4) * 255) };
     }
 
+    // Sync camera across ALL layers (Body, Parts, Eyes)
     function sync() {
         const orbit = main.getCameraOrbit();
         const fov = main.getFieldOfView();
