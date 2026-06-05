@@ -3,75 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Griffin Fix</title>
-    
+    <title>Griffin Previewer</title>
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-
     <style>
-        body { margin: 0; background: #111; color: white; font-family: sans-serif; text-align: center; }
-        #status-box { 
-            background: #444; 
-            padding: 15px; 
-            margin: 10px; 
-            border-radius: 10px; 
-            font-weight: bold; 
-            border: 2px solid #ff9d00;
-        }
-        .viewer-area { width: 100vw; height: 70vh; background: #222; position: relative; }
+        body { margin: 0; background: #1a1a1a; color: white; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        header { padding: 10px; background: #222; text-align: center; border-bottom: 2px solid #ff9d00; }
+        #status-bar { background: #2ecc71; color: black; padding: 5px; font-size: 12px; font-weight: bold; text-align: center; }
+        .viewer-container { flex: 1; position: relative; background: radial-gradient(#333, #000); }
         model-viewer { width: 100%; height: 100%; }
-        .controls { padding: 20px; }
-        button { background: #ff9d00; border: none; padding: 15px 25px; border-radius: 8px; font-size: 16px; font-weight: bold; }
+        .ui-panel { padding: 15px; background: #222; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; overflow-y: auto; max-height: 40vh; }
+        .group { border: 1px solid #444; padding: 10px; border-radius: 10px; background: #2d2d2d; text-align: center; }
+        h4 { margin: 0 0 10px 0; font-size: 12px; color: #ff9d00; text-transform: uppercase; }
+        button { background: #444; color: white; border: 1px solid #666; padding: 10px 15px; cursor: pointer; border-radius: 5px; font-size: 14px; }
+        button:active { background: #ff9d00; color: black; }
     </style>
 </head>
 <body>
 
-    <div id="status-box">
-        STATUS: <span id="status-text" style="color: #ff9d00;">INITIALIZING...</span>
-    </div>
+<header><h2 style="margin:0;">Griffin Previewer</h2></header>
+<div id="status-bar">SYSTEM ONLINE</div>
 
-    <div class="viewer-area">
-        <model-viewer id="griffin" 
-            src="Griffin_LQ_Body_Mesh.glb" 
-            camera-controls 
-            auto-rotate 
-            bounds="tight"
-            exposure="1"
-            loading="eager">
-            
-            <div slot="poster" style="color: #888; margin-top: 100px;">
-                Looking for Griffin_LQ_Body_Mesh.glb...
-            </div>
+<div class="viewer-container">
+    <model-viewer id="griffin" 
+        src="Griffin_LQ_Body_Mesh.glb" 
+        camera-controls 
+        auto-rotate 
+        bounds="tight"
+        exposure="1.2"
+        shadow-intensity="1">
+        
+        <model-viewer id="crest-layer" 
+            src="Crest_1.glb" 
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;">
         </model-viewer>
+    </model-viewer>
+</div>
+
+<div class="ui-panel">
+    <div class="group">
+        <h4>Body Patterns</h4>
+        <button onclick="changePattern('Griffin_Pattern00_HQ.png')">00</button>
+        <button onclick="changePattern('Griffin_Pattern01_HQ.png')">01</button>
+        <button onclick="changePattern('Griffin_Pattern02_HQ.png')">02</button>
+        <button onclick="changePattern('Griffin_Pattern03_HQ.png')">03</button>
+        <button onclick="changePattern('Griffin_Pattern04_HQ.png')">04</button>
     </div>
 
-    <div class="controls">
-        <button onclick="location.reload(true)">FORCE REFRESH</button>
+    <div class="group">
+        <h4>Head Piece</h4>
+        <button onclick="toggleCrest(true)">Show Crest</button>
+        <button onclick="toggleCrest(false)">Remove</button>
     </div>
+</div>
 
 <script>
     const viewer = document.querySelector('#griffin');
-    const statusText = document.querySelector('#status-text');
+    const crest = document.querySelector('#crest-layer');
 
-    // 1. Check if the engine even loads
-    setTimeout(() => {
-        if (statusText.innerText === "INITIALIZING...") {
-            statusText.innerText = "ENGINE FAILED (Try Refreshing)";
-            statusText.style.color = "red";
+    async function changePattern(fileName) {
+        if (!viewer.model) return;
+        const material = viewer.model.materials[0];
+        // This line loads the PNG onto the 3D model
+        const texture = await viewer.createTexture(fileName);
+        if (material.pbrMetallicRoughness && material.pbrMetallicRoughness.baseColorTexture) {
+            material.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
         }
-    }, 5000);
+    }
 
-    // 2. If the file is missing
-    viewer.addEventListener('error', (e) => {
-        statusText.innerText = "FILE NOT FOUND (Check Names!)";
-        statusText.style.color = "red";
-        console.log(e);
-    });
-
-    // 3. If it works!
-    viewer.addEventListener('load', () => {
-        statusText.innerText = "ONLINE - GRIFFIN LOADED!";
-        statusText.style.color = "#2ecc71";
-    });
+    function toggleCrest(show) {
+        crest.style.display = show ? "block" : "none";
+    }
 </script>
 
 </body>
