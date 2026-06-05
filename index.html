@@ -48,9 +48,9 @@
 <div class="viewer-container">
     <model-viewer id="griffin" src="griffin.glb" camera-controls auto-rotate interaction-prompt="none" shadow-intensity="1" exposure="1.2"></model-viewer>
     
-    <model-viewer id="crest-v" src="bestial.glb" interaction-prompt="none"></model-viewer>
-    <model-viewer id="wings-v" src="manticore.glb" interaction-prompt="none"></model-viewer>
-    <model-viewer id="tail-v" src="fanned.glb" interaction-prompt="none"></model-viewer>
+    <model-viewer id="crest-v" src="" interaction-prompt="none"></model-viewer>
+    <model-viewer id="wings-v" src="" interaction-prompt="none"></model-viewer>
+    <model-viewer id="tail-v" src="" interaction-prompt="none"></model-viewer>
 </div>
 
 <div class="sidebar">
@@ -109,6 +109,7 @@
         { name: "Warm Tangerine", count: 15 }
     ];
 
+    // Generate UI
     ["primary", "secondary", "tertiary"].forEach(section => {
         const container = document.getElementById(`${section}-container`);
         paletteData.forEach(p => {
@@ -138,22 +139,24 @@
         updateMaterials();
     }
 
-    // Forces immediate sync to prevent "multiplication" lag
+    // High frequency sync to prevent ghosting
     function sync() {
         const orbit = main.getCameraOrbit();
         const fov = main.getFieldOfView();
         const target = main.getCameraTarget();
         Object.values(parts).forEach(v => {
-            v.cameraOrbit = `${orbit.theta}rad ${orbit.phi}rad ${orbit.radius}m`;
-            v.fieldOfView = `${fov}deg`;
-            v.cameraTarget = `${target.x}m ${target.y}m ${target.z}m`;
+            if(v.src) {
+                v.cameraOrbit = `${orbit.theta}rad ${orbit.phi}rad ${orbit.radius}m`;
+                v.fieldOfView = `${fov}deg`;
+                v.cameraTarget = `${target.x}m ${target.y}m ${target.z}m`;
+            }
         });
         requestAnimationFrame(sync);
     }
     sync();
 
     async function updateMaterials() {
-        // Update Body
+        // Body Update
         if (main.model) {
             for (const mat of main.model.materials) {
                 if (mat.name === "Material" || mat.name === "Griffin_Main") {
@@ -167,17 +170,15 @@
             }
         }
 
-        // Update Traits and apply their specific textures
+        // Traits Update
         for (const [key, v] of Object.entries(parts)) {
             if (v.src && v.model) {
                 for (const mat of v.model.materials) {
-                    // Re-apply trait-specific textures if they are missing
                     const texFile = (key === 'wings') ? 'Griffin_Wings.png' : 'Griffin_Tails_Crests.png';
                     const texture = await v.createTexture(texFile);
                     if (mat.pbrMetallicRoughness.baseColorTexture) {
                         mat.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
                     }
-                    // Apply tint
                     const rgb = hexToRgb(colors.primary);
                     mat.pbrMetallicRoughness.setBaseColorFactor([rgb.r/255, rgb.g/255, rgb.b/255, 1]);
                 }
@@ -204,11 +205,15 @@
 
     function changePart(type, file) {
         parts[type].src = file;
-        // Small delay to ensure model is in memory before re-applying textures
-        parts[type].addEventListener('model-visibility', () => {
-            setTimeout(updateMaterials, 50);
-        }, { once: true });
+        parts[type].addEventListener('model-visibility', () => setTimeout(updateMaterials, 50), { once: true });
     }
+
+    // MANDATORY STARTUP RESET: Forces only your default traits to show
+    window.onload = () => {
+        changePart('crest', 'bestial.glb');
+        changePart('wings', 'manticore.glb');
+        changePart('tail', 'fanned.glb');
+    };
 
     main.addEventListener('model-visibility', updateMaterials);
 </script>
