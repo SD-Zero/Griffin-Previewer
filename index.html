@@ -111,6 +111,20 @@
         ctx.putImageData(imageData, 0, 0); return canvas.toDataURL();
     }
 
+    function toggleEyes(meshToShow) {
+        if (!main.model) return;
+        const normalMesh = main.model.nodes.find(node => node.name === 'Mesh_Eyes_Normal');
+        const lashMesh = main.model.nodes.find(node => node.name === 'Mesh_Eyes_Lashes');
+        
+        if (meshToShow === 'Mesh_Eyes_Normal') {
+            if (normalMesh) normalMesh.isVisible = true;
+            if (lashMesh) lashMesh.isVisible = false;
+        } else {
+            if (normalMesh) normalMesh.isVisible = false;
+            if (lashMesh) lashMesh.isVisible = true;
+        }
+    }
+
     async function updateAll() {
         if (!main.model) return;
         
@@ -127,26 +141,22 @@
                 if (mat.pbrMetallicRoughness.baseColorTexture) mat.pbrMetallicRoughness.baseColorTexture.setTexture(tex);
             }
         }
-    }
-
-    function toggleEyes(meshName) {
-        if (!main.model) return;
-        // Search through the model primitives to find the mesh by name
-        main.model.materials.forEach(mat => {
-            // This version uses material names for the bake, but we toggle visibility of the actual mesh nodes
-        });
         
-        // Model-viewer visibility toggle logic
-        const lashes = meshName === 'Mesh_Eyes_Lashes';
-        // We set the scale to 0 to "hide" them if variant switching isn't supported in your GLB export
-        // Or we use the newer object-level visibility if available
+        // Initial state: Show Normal, Hide Lashes
+        const normalMesh = main.model.nodes.find(node => node.name === 'Mesh_Eyes_Normal');
+        const lashMesh = main.model.nodes.find(node => node.name === 'Mesh_Eyes_Lashes');
+        if (normalMesh && lashMesh && !window.eyesInitialized) {
+            normalMesh.isVisible = true;
+            lashMesh.isVisible = false;
+            window.eyesInitialized = true;
+        }
     }
 
     function changeEyeShape(f) { currentEyeShape = f; updateAll(); }
     function changePattern(f) { currentPattern = f; updateAll(); }
     function hslToRgb(h, s, l) { const f = (n, k = (n + h / 30) % 12) => l - s * Math.min(l, 1 - l) * Math.max(Math.min(k - 3, 9 - k, 1), -1); return { r: Math.round(f(0) * 255), g: Math.round(f(8) * 255), b: Math.round(f(4) * 255) }; }
     
-    main.addEventListener('model-visibility', updateAll);
+    main.addEventListener('load', updateAll);
 </script>
 </body>
 </html>
