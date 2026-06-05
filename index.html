@@ -133,11 +133,10 @@
         
         Object.values(parts).forEach(v => {
             if(v.getAttribute('src')) {
-                // Force sync camera AND target to keep them out of "your face"
                 v.cameraOrbit = `${orbit.theta}rad ${orbit.phi}rad ${orbit.radius}m`;
                 v.fieldOfView = `${fov}deg`;
                 v.cameraTarget = `${target.x}m ${target.y}m ${target.z}m`;
-                v.jumpCameraToGoal(); // Forces an immediate snap
+                v.jumpCameraToGoal();
             }
         });
         requestAnimationFrame(sync);
@@ -148,6 +147,7 @@
         if (main.model) {
             for (const mat of main.model.materials) {
                 const n = mat.name.toLowerCase();
+                // If the main file contains traits, hide them by making them invisible
                 if (n.includes("wing") || n.includes("tail") || n.includes("crest")) {
                     mat.setAlphaMode("BLEND");
                     mat.pbrMetallicRoughness.setBaseColorFactor([0,0,0,0]);
@@ -163,11 +163,20 @@
         for (const [key, v] of Object.entries(parts)) {
             if (v.getAttribute('src') && v.model) {
                 for (const mat of v.model.materials) {
-                    const texFile = (key === 'wings') ? 'Griffin_Wings.png' : 'Griffin_Tails_Crests.png';
-                    const texture = await v.createTexture(texFile);
-                    if (mat.pbrMetallicRoughness.baseColorTexture) mat.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
-                    const rgb = hexToRgb(primaryColor);
-                    mat.pbrMetallicRoughness.setBaseColorFactor([rgb.r/255, rgb.g/255, rgb.b/255, 1]);
+                    const n = mat.name.toLowerCase();
+                    // FORCE HIDE the extra griffin body inside the trait file
+                    if (n.includes("griffin") || n.includes("body") || n.includes("main")) {
+                        mat.setAlphaMode("BLEND");
+                        mat.pbrMetallicRoughness.setBaseColorFactor([0,0,0,0]);
+                    } 
+                    // Only texture the part that matches the viewer (e.g. 'wing' for 'wings-v')
+                    else if (n.includes(key.substring(0,3))) {
+                        const texFile = (key === 'wings') ? 'Griffin_Wings.png' : 'Griffin_Tails_Crests.png';
+                        const texture = await v.createTexture(texFile);
+                        if (mat.pbrMetallicRoughness.baseColorTexture) mat.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
+                        const rgb = hexToRgb(primaryColor);
+                        mat.pbrMetallicRoughness.setBaseColorFactor([rgb.r/255, rgb.g/255, rgb.b/255, 1]);
+                    }
                 }
                 v.style.visibility = "visible";
             }
