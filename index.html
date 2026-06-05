@@ -74,7 +74,6 @@
         <button class="part-btn" onclick="togglePart('tail', 'svelte')">SVELTE</button>
         <button class="part-btn" onclick="togglePart('tail', 'tufted')">TUFTED</button>
         <button class="part-btn" onclick="togglePart('tail', 'scorpio')">SCORPIO</button>
-        <button class="part-btn" onclick="togglePart('tail', 'none')">NONE</button>
     </div></details>
 
     <details open><summary>PATTERNS</summary><div class="button-stack">
@@ -98,13 +97,16 @@
     let currentPattern = 'Griffin_Pattern00_HQ.png';
     let currentEyeShape = 'Eye00_Texture.png';
     
-    // Default active traits
     let activeParts = { 
         eye: 'Mesh_Eyes_Normal', 
         crest: 'bestial', 
         wing: 'manticore', 
         tail: 'fanned' 
     };
+
+    // Shared canvas to reduce memory/speed up switching
+    const offscreenCanvas = document.createElement('canvas');
+    const offscreenCtx = offscreenCanvas.getContext('2d', { willReadFrequently: true });
 
     ["primary", "secondary", "tertiary", "eye"].forEach(type => {
         const container = document.getElementById(`${type}-container`);
@@ -120,9 +122,10 @@
 
     async function processTexture(imgSrc, isEye = false) {
         const img = new Image(); img.crossOrigin = "anonymous"; img.src = imgSrc; await img.decode();
-        const canvas = document.createElement('canvas'); canvas.width = img.width; canvas.height = img.height;
-        const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0);
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height), data = imageData.data;
+        offscreenCanvas.width = img.width; offscreenCanvas.height = img.height;
+        offscreenCtx.drawImage(img, 0, 0);
+        const imageData = offscreenCtx.getImageData(0, 0, offscreenCanvas.width, offscreenCanvas.height), data = imageData.data;
+        
         for (let i = 0; i < data.length; i += 4) {
             const r = data[i], g = data[i+1], b = data[i+2];
             if (isEye) {
@@ -135,55 +138,45 @@
                 const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
                 if (lum < 0.05) continue;
                 let target = null;
+                // Detect Red (Primary)
                 if (r > 60 && r > g * 1.3 && r > b * 1.3) target = colors.primary;
-                else if (r > 100 && g > 100 && b < 140) target = colors.secondary;
+                // Detect Yellow/Green (Secondary) - Expanded range to catch neon green
+                else if (r > 80 && g > 80 && b < 160) target = colors.secondary;
+                // Detect Blue/Cyan (Tertiary)
                 else if (b > 50 || (r > 100 && b > 100)) target = colors.tertiary;
+                
                 if (target) { data[i] = target.r; data[i+1] = target.g; data[i+2] = target.b; }
             }
         }
-        ctx.putImageData(imageData, 0, 0); return canvas.toDataURL();
+        offscreenCtx.putImageData(imageData, 0, 0); return offscreenCanvas.toDataURL();
     }
 
     function togglePart(type, name) {
         activeParts[type] = name;
         if (!main.model) return;
         
-        // Find the internal Three.js scene graph
         const sceneSymbol = Object.getOwnPropertySymbols(main).find(s => s.description === 'scene');
         const scene = main[sceneSymbol];
         if (!scene) return;
 
+        const crests = ['bestial', 'pinnacle', 'windswept', 'harpy'];
+        const wings = ['heroic', 'osprey', 'manticore', 'scarab', 'seraph'];
+        const tails = ['fanned', 'svelte', 'tufted', 'scorpio'];
+
         scene.traverse((obj) => {
             if (obj.isMesh || obj.isGroup) {
                 const nodeName = obj.name.toLowerCase();
-                
-                // Handle Eyes specifically
                 if (type === 'eye') {
                     if (nodeName.includes('mesh_eyes_normal')) obj.visible = (name === 'Mesh_Eyes_Normal');
                     if (nodeName.includes('mesh_eyes_lashes')) obj.visible = (name === 'Mesh_Eyes_Lashes');
-                } 
-                // Handle Crests, Wings, and Tails
-                else {
-                    // Only act if the object name contains our category (e.g., 'wing')
-                    // Note: If you named your mesh 'heroic', it must contain the word 'wing' 
-                    // in Blender OR we just check the trait names directly.
-                    const traits = ['bestial', 'pinnacle', 'windswept', 'harpy', 'heroic', 'osprey', 'manticore', 'scarab', 'seraph', 'fanned', 'svelte', 'tufted', 'scorpio'];
-                    
-                    if (traits.some(t => nodeName.includes(t))) {
-                        // Check if this object belongs to the specific category we are toggling
-                        // e.g., if toggling 'crest', we only want to affect objects like 'bestial' or 'harpy'
-                        const crests = ['bestial', 'pinnacle', 'windswept', 'harpy'];
-                        const wings = ['heroic', 'osprey', 'manticore', 'scarab', 'seraph'];
-                        const tails = ['fanned', 'svelte', 'tufted', 'scorpio'];
+                } else {
+                    let categoryMatch = false;
+                    if (type === 'crest' && crests.includes(nodeName)) categoryMatch = true;
+                    if (type === 'wing' && wings.includes(nodeName)) categoryMatch = true;
+                    if (type === 'tail' && tails.includes(nodeName)) categoryMatch = true;
 
-                        let categoryMatch = false;
-                        if (type === 'crest' && crests.includes(nodeName)) categoryMatch = true;
-                        if (type === 'wing' && wings.includes(nodeName)) categoryMatch = true;
-                        if (type === 'tail' && tails.includes(nodeName)) categoryMatch = true;
-
-                        if (categoryMatch) {
-                            obj.visible = (nodeName === name.toLowerCase());
-                        }
+                    if (categoryMatch) {
+                        obj.visible = (nodeName === name.toLowerCase());
                     }
                 }
             }
@@ -198,13 +191,15 @@
         const tcBake = await processTexture('Griffin_Tails_Crests.png');
         const eyeBake = await processTexture(currentEyeShape, true);
         
+        const materialMap = {
+            "Mat_GriffinBody": bodyBake,
+            "Mat_Wings": wingBake,
+            "Mat_Tails_Crests": tcBake,
+            "Mat_Eyes": eyeBake
+        };
+
         for (const mat of main.model.materials) {
-            let texData = null;
-            if (mat.name === "Mat_GriffinBody") texData = bodyBake;
-            if (mat.name === "Mat_Wings") texData = wingBake;
-            if (mat.name === "Mat_Tails_Crests") texData = tcBake;
-            if (mat.name === "Mat_Eyes") texData = eyeBake;
-            
+            const texData = materialMap[mat.name];
             if (texData) {
                 const tex = await main.createTexture(texData);
                 if (mat.pbrMetallicRoughness.baseColorTexture) {
@@ -213,7 +208,6 @@
             }
         }
         
-        // Initial visibility pass
         Object.keys(activeParts).forEach(type => togglePart(type, activeParts[type]));
     }
 
@@ -221,7 +215,6 @@
     function changePattern(f) { currentPattern = f; updateAll(); }
     function hslToRgb(h, s, l) { const f = (n, k = (n + h / 30) % 12) => l - s * Math.min(l, 1 - l) * Math.max(Math.min(k - 3, 9 - k, 1), -1); return { r: Math.round(f(0) * 255), g: Math.round(f(8) * 255), b: Math.round(f(4) * 255) }; }
     
-    // Trigger update and defaults as soon as the model is ready
     main.addEventListener('load', updateAll);
 </script>
 </body>
