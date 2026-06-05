@@ -3,73 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Animal Jam Griffin Previewer</title>
+    <title>Griffin Previewer</title>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.3.1/model-viewer.min.js"></script>
     <style>
-        body { 
-            margin: 0; 
-            background: #1a1a1a; 
-            color: #eee; 
-            font-family: 'Verdana', sans-serif; 
-            display: flex; 
-            flex-direction: column; 
-            height: 100vh; 
-            overflow: hidden;
-        }
-        header { 
-            padding: 10px; 
-            text-align: center; 
-            background: #222; 
-            border-bottom: 2px solid #ff9d00; 
-        }
-        /* The 3D Window */
-        .viewer-container {
-            flex: 1;
-            position: relative;
-            width: 100%;
-            background: radial-gradient(#333, #000);
-        }
-        model-viewer { 
-            width: 100%; 
-            height: 100%; 
-        }
-        /* The Control Panel */
-        .ui-panel { 
-            padding: 15px; 
-            background: #222; 
-            display: flex; 
-            flex-wrap: wrap; 
-            gap: 15px; 
-            justify-content: center; 
-            max-height: 40vh;
-            overflow-y: auto;
-        }
-        .group { 
-            border: 1px solid #444; 
-            padding: 10px; 
-            border-radius: 10px; 
-            background: #2d2d2d; 
-            min-width: 150px;
-        }
-        h4 { margin: 0 0 10px 0; font-size: 14px; color: #ff9d00; text-transform: uppercase; }
-        button { 
-            background: #444; 
-            color: white; 
-            border: 1px solid #666; 
-            padding: 8px 12px; 
-            cursor: pointer; 
-            border-radius: 5px; 
-            margin: 2px;
-            font-size: 12px;
-        }
+        body { margin: 0; background: #1a1a1a; color: white; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        header { padding: 10px; text-align: center; background: #222; border-bottom: 2px solid #ff9d00; }
+        .viewer-container { flex: 1; position: relative; background: radial-gradient(#333, #000); }
+        model-viewer { width: 100%; height: 100%; }
+        .ui-panel { padding: 15px; background: #222; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; overflow-y: auto; }
+        .group { border: 1px solid #444; padding: 10px; border-radius: 10px; background: #2d2d2d; }
+        h4 { margin: 0 0 10px 0; font-size: 14px; color: #ff9d00; }
+        button { background: #444; color: white; border: 1px solid #666; padding: 10px; cursor: pointer; border-radius: 5px; margin: 2px; }
         button:hover { background: #ff9d00; color: black; }
-        button.active { background: #ff9d00; color: black; }
     </style>
 </head>
 <body>
 
 <header>
-    <h2 style="margin:0;">Griffin Previewer</h2>
+    <h2 style="margin:0;">Griffin 3D Previewer</h2>
 </header>
 
 <div class="viewer-container">
@@ -80,7 +31,8 @@
         shadow-intensity="1" 
         environment-image="neutral"
         exposure="1"
-        bounds="tight">
+        bounds="tight"
+        camera-orbit="auto auto auto">
         
         <model-viewer id="crest-layer" 
             src="Crest_1.glb" 
@@ -93,16 +45,16 @@
 <div class="ui-panel">
     <div class="group">
         <h4>Patterns</h4>
-        <button onclick="changePattern('Griffin_Pattern00_HQ.png')">Pattern 00</button>
-        <button onclick="changePattern('Griffin_Pattern01_HQ.png')">Pattern 01</button>
-        <button onclick="changePattern('Griffin_Pattern02_HQ.png')">Pattern 02</button>
-        <button onclick="changePattern('Griffin_Pattern03_HQ.png')">Pattern 03</button>
-        <button onclick="changePattern('Griffin_Pattern04_HQ.png')">Pattern 04</button>
+        <button onclick="changePattern('Griffin_Pattern00_HQ.png')">00</button>
+        <button onclick="changePattern('Griffin_Pattern01_HQ.png')">01</button>
+        <button onclick="changePattern('Griffin_Pattern02_HQ.png')">02</button>
+        <button onclick="changePattern('Griffin_Pattern03_HQ.png')">03</button>
+        <button onclick="changePattern('Griffin_Pattern04_HQ.png')">04</button>
     </div>
 
     <div class="group">
         <h4>Crest</h4>
-        <button onclick="toggleCrest(true)">Crest 1</button>
+        <button onclick="toggleCrest(true)">Show</button>
         <button onclick="toggleCrest(false)">None</button>
     </div>
 </div>
@@ -111,25 +63,17 @@
     const griffinModel = document.querySelector('#griffin');
     const crestModel = document.querySelector('#crest-layer');
 
-    // Function to change the texture of the base model
     async function changePattern(fileName) {
-        if (!griffinModel.model) {
-            console.error("Model not loaded yet");
-            return;
-        }
+        if (!griffinModel.model) return;
         const material = griffinModel.model.materials[0];
         const texture = await griffinModel.createTexture(fileName);
-        // Applies texture to the "Base Color" slot
         if (material.pbrMetallicRoughness && material.pbrMetallicRoughness.baseColorTexture) {
             material.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
         }
     }
 
-    // Function to hide or show the crest model
     function toggleCrest(isVisible) {
-        crestModel.style.visibility = isVisible ? "visible" : "hidden";
-        // If hidden, we also move it away so it doesn't block the camera
-        crestModel.style.opacity = isVisible ? "1" : "0";
+        crestModel.style.display = isVisible ? "block" : "none";
     }
 </script>
 
