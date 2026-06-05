@@ -7,64 +7,47 @@
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <style>
         body { margin: 0; background: #1a1a1a; color: white; font-family: sans-serif; display: flex; height: 100vh; overflow: hidden; }
-        
         .viewer-container { flex: 1; position: relative; background: radial-gradient(#333, #000); }
         model-viewer { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
         #griffin { z-index: 1; pointer-events: auto; }
         #crest-v, #wings-v, #tail-v { z-index: 2; pointer-events: none; }
 
-        /* SIDEBAR STYLING */
         .sidebar { 
             width: 320px; background: #222; border-left: 2px solid #ff9d00; 
             display: flex; flex-direction: column; overflow-y: auto; padding: 10px;
         }
-
         h2 { font-size: 16px; color: #ff9d00; text-align: center; margin: 10px 0; border-bottom: 1px solid #444; padding-bottom: 10px; }
-
-        /* ACCORDION DROPDOWNS */
         details { margin-bottom: 5px; background: #2d2d2d; border-radius: 4px; }
-        summary { 
-            padding: 12px; font-weight: bold; cursor: pointer; background: #333; 
-            display: flex; justify-content: space-between; list-style: none;
-        }
+        summary { padding: 12px; font-weight: bold; cursor: pointer; background: #333; display: flex; justify-content: space-between; list-style: none; }
         summary::after { content: '▼'; font-size: 10px; color: #ff9d00; }
         details[open] summary::after { content: '▲'; }
 
         .palette-group { background: #1a1a1a; padding: 5px; border-top: 1px solid #444; }
         .color-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 10px; }
-        
-        .swatch { 
-            width: 100%; aspect-ratio: 1; border-radius: 3px; border: 1px solid #555; 
-            cursor: pointer; font-size: 0;
-            transition: transform 0.1s;
-        }
+        .swatch { width: 100%; aspect-ratio: 1; border-radius: 3px; border: 1px solid #555; cursor: pointer; transition: transform 0.1s; }
         .swatch:hover { transform: scale(1.1); border-color: #fff; }
         .swatch.active { border: 2px solid white; box-shadow: 0 0 5px #ff9d00; }
-        
-        .random-btn { 
-            grid-column: span 4; background: #444; color: #ff9d00; border: 1px solid #ff9d00;
-            padding: 5px; cursor: pointer; border-radius: 4px; font-weight: bold; margin-top: 5px;
-        }
+        .random-btn { grid-column: span 4; background: #444; color: #ff9d00; border: 1px solid #ff9d00; padding: 5px; cursor: pointer; border-radius: 4px; font-weight: bold; margin-top: 5px; }
 
         .button-stack { display: flex; flex-direction: column; padding: 10px; gap: 5px; }
         button.part-btn { background: #444; color: white; border: 1px solid #555; padding: 10px; text-align: left; border-radius: 4px; cursor: pointer; }
-        button.part-btn:hover { background: #555; }
         button:active { background: #ff9d00; color: black; }
     </style>
 </head>
 <body>
 
 <div class="viewer-container">
-    <model-viewer id="griffin" src="griffin.glb" camera-controls interaction-prompt="none" shadow-intensity="1" exposure="1.2"></model-viewer>
-    <model-viewer id="crest-v" src="" interaction-prompt="none" center-model="false"></model-viewer>
-    <model-viewer id="wings-v" src="" interaction-prompt="none" center-model="false"></model-viewer>
-    <model-viewer id="tail-v" src="" interaction-prompt="none" center-model="false"></model-viewer>
+    <model-viewer id="griffin" src="griffin.glb" camera-controls auto-rotate interaction-prompt="none" shadow-intensity="1" exposure="1.2"></model-viewer>
+    
+    <model-viewer id="crest-v" src="bestial.glb" interaction-prompt="none" center-model="false"></model-viewer>
+    <model-viewer id="wings-v" src="manticore.glb" interaction-prompt="none" center-model="false"></model-viewer>
+    <model-viewer id="tail-v" src="fanned.glb" interaction-prompt="none" center-model="false"></model-viewer>
 </div>
 
 <div class="sidebar">
     <h2>GRIFFIN EDITOR</h2>
 
-    <details class="main-nav"><summary>Patterns</summary><div class="button-stack">
+    <details class="main-nav" open><summary>Patterns</summary><div class="button-stack">
         <button class="part-btn" onclick="changePattern('Griffin_Pattern00_HQ.png')">Drifter</button>
         <button class="part-btn" onclick="changePattern('Griffin_Pattern01_HQ.png')">Duochrome</button>
         <button class="part-btn" onclick="changePattern('Griffin_Pattern02_HQ.png')">Shining</button>
@@ -94,7 +77,6 @@
         <button class="part-btn" onclick="changePart('tail', 'svelte.glb')">Svelte</button>
         <button class="part-btn" onclick="changePart('tail', 'tufted.glb')">Tufted</button>
         <button class="part-btn" onclick="changePart('tail', 'scorpio.glb')">Scorpio</button>
-        <button class="part-btn" onclick="changePart('tail', '')">None</button>
     </div></details>
 
     <details class="main-nav"><summary>Primary Color</summary><div id="primary-container"></div></details>
@@ -125,7 +107,6 @@
             det.className = "palette-group";
             det.innerHTML = `<summary style="font-size:12px;">${p.name} (${p.count})</summary><div class="color-grid" id="${section}-${p.name.replace(/\s/g, '')}"></div>`;
             container.appendChild(det);
-            
             const grid = det.querySelector('.color-grid');
             for(let i=0; i<p.count; i++) {
                 const s = document.createElement('div');
@@ -135,39 +116,13 @@
                 s.onclick = (e) => setColor(section, placeholderHex, e.target);
                 grid.appendChild(s);
             }
-            const rand = document.createElement('button');
-            rand.className = "random-btn";
-            rand.innerText = "RANDOM";
-            rand.onclick = () => {
-                const swatches = grid.querySelectorAll('.swatch');
-                swatches[Math.floor(Math.random() * swatches.length)].click();
-            };
-            grid.appendChild(rand);
-        });
-    });
-
-    const allDetails = document.querySelectorAll('details.main-nav');
-    allDetails.forEach(targetDetail => {
-        targetDetail.addEventListener('click', () => {
-            allDetails.forEach(detail => {
-                if (detail !== targetDetail) detail.removeAttribute('open');
-            });
         });
     });
 
     const main = document.querySelector('#griffin');
-    const parts = { 
-        crest: document.querySelector('#crest-v'), 
-        wings: document.querySelector('#wings-v'), 
-        tail: document.querySelector('#tail-v') 
-    };
-    
+    const parts = { crest: document.querySelector('#crest-v'), wings: document.querySelector('#wings-v'), tail: document.querySelector('#tail-v') };
     let currentPattern = 'Griffin_Pattern00_HQ.png';
-    let colors = {
-        primary: '#ffffff',
-        secondary: '#ffffff',
-        tertiary: '#ffffff'
-    };
+    let colors = { primary: '#ffffff', secondary: '#ffffff', tertiary: '#ffffff' };
 
     function setColor(type, hex, element) {
         colors[type] = hex;
@@ -177,6 +132,7 @@
         updateMaterials();
     }
 
+    // Camera Sync
     main.addEventListener('camera-change', () => {
         const target = main.getCameraTarget();
         Object.values(parts).forEach(v => {
@@ -188,25 +144,18 @@
 
     async function updateMaterials() {
         const viewers = [main, ...Object.values(parts)];
-        
         for (const v of viewers) {
             if (v.src && v.model) {
                 for (const mat of v.model.materials) {
-                    
-                    // 1. If it's the Body material, swap the pattern texture
-                    // Ensure your Body material in Blender is named "Griffin_Main"
-                    if (mat.name === "Griffin_Main") {
+                    // Try to match "Material" (Blender default) OR "Griffin_Main"
+                    if (mat.name === "Material" || mat.name === "Griffin_Main") {
                         const texture = await v.createTexture(currentPattern);
                         if (mat.pbrMetallicRoughness.baseColorTexture) {
                             mat.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
                         }
                     }
-
-                    // 2. Tint based on the PRIMARY color selected
                     const rgb = hexToRgb(colors.primary);
-                    if (mat.pbrMetallicRoughness) {
-                        mat.pbrMetallicRoughness.setBaseColorFactor([rgb.r/255, rgb.g/255, rgb.b/255, 1]);
-                    }
+                    mat.pbrMetallicRoughness.setBaseColorFactor([rgb.r/255, rgb.g/255, rgb.b/255, 1]);
                 }
             }
         }
@@ -214,19 +163,14 @@
 
     function hexToRgb(hex) {
         if(hex.startsWith('hsl')) {
-            let sep = hex.indexOf(",") > -1 ? "," : " ";
-            let hsl = hex.substr(4).split(")")[0].split(sep);
-            let h = hsl[0], s = hsl[1].substr(0,hsl[1].length-1) / 100, l = hsl[2].substr(0,hsl[2].length-1) / 100;
+            let hsl = hex.substr(4).split(")")[0].split(/[ ,]+/);
+            let h = hsl[0], s = hsl[1].replace('%','') / 100, l = hsl[2].replace('%','') / 100;
             let a = s * Math.min(l, 1 - l);
             let f = (n, k = (n + h / 30) % 12) => l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
             return { r: f(0) * 255, g: f(8) * 255, b: f(4) * 255 };
         }
         var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-        return result ? {
-            r: parseInt(result[1], 16),
-            g: parseInt(result[2], 16),
-            b: parseInt(result[3], 16)
-        } : {r: 255, g: 255, b: 255};
+        return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : {r: 255, g: 255, b: 255};
     }
 
     async function changePattern(fileName) {
@@ -235,13 +179,12 @@
     }
 
     function changePart(type, file) {
-        const target = parts[type];
-        target.src = file;
-        // Listen for the model to finish loading before trying to apply colors/textures
-        target.addEventListener('model-visibility', () => {
-            updateMaterials();
-        }, { once: true });
+        parts[type].src = file;
+        parts[type].addEventListener('model-visibility', () => updateMaterials(), { once: true });
     }
+
+    // Initial load sync
+    main.addEventListener('model-visibility', () => updateMaterials());
 </script>
 
 </body>
