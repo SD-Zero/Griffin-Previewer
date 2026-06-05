@@ -1,196 +1,110 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Griffin Creator Ultimate</title>
-    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-    <style>
-        body { margin: 0; background: #111; color: white; font-family: sans-serif; display: flex; height: 100vh; overflow: hidden; }
-        .viewer-container { flex: 1; position: relative; background: radial-gradient(#333, #000); }
-        model-viewer { width: 100%; height: 100%; --poster-color: transparent; }
-        .sidebar { width: 320px; background: #222; border-left: 2px solid #ff9d00; display: flex; flex-direction: column; overflow-y: auto; padding: 10px; }
-        h2 { font-size: 14px; color: #ff9d00; text-align: center; letter-spacing: 2px; margin: 10px 0; border-bottom: 1px solid #444; padding-bottom: 10px; }
-        details { margin-bottom: 5px; background: #2d2d2d; border-radius: 4px; }
-        summary { padding: 12px; font-weight: bold; cursor: pointer; background: #333; display: flex; justify-content: space-between; font-size: 13px; }
-        .button-stack { display: flex; flex-direction: column; padding: 10px; gap: 5px; }
-        button.part-btn { background: #444; color: #ddd; border: 1px solid #555; padding: 10px; text-align: left; border-radius: 4px; cursor: pointer; font-size: 12px; }
-        button.part-btn:hover { background: #555; border-color: #ff9d00; }
-        select.part-select { background: #444; color: white; border: 1px solid #555; padding: 10px; border-radius: 4px; cursor: pointer; font-size: 12px; width: 100%; }
-        .palette-group { background: #1a1a1a; padding: 5px; border-top: 1px solid #333; }
-        .color-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 10px; }
-        .swatch { width: 100%; aspect-ratio: 1; border-radius: 3px; cursor: pointer; border: 1px solid #444; transition: transform 0.1s; }
-        .swatch:hover { transform: scale(1.1); border-color: white; }
-    </style>
-</head>
-<body>
+const paletteData = [{ name: "Amethyst Wildflower", count: 12 }, { name: "Cerulean Sky", count: 14 }, { name: "Dreamy Lilac", count: 15 }, { name: "Dusty Taupe", count: 13 }, { name: "Earthy Umber", count: 15 }, { name: "Flaxen Ochre", count: 16 }, { name: "Florid Vermillion", count: 14 }, { name: "Forested Juniper", count: 14 }, { name: "Hazel Olive", count: 15 }, { name: "Lush Berry", count: 13 }, { name: "Misty Starlight", count: 13 }, { name: "Oceanic Sapphire", count: 15 }, { name: "Opulant Royalty", count: 14 }, { name: "Pale Pastel", count: 15 }, { name: "Rosy Sunset", count: 14 }, { name: "Russet Mahogany", count: 12 }, { name: "Seafoam Lagoon", count: 14 }, { name: "Shady Dark", count: 17 }, { name: "Smoky Dust", count: 13 }, { name: "Sunny Amber", count: 14 }, { name: "Verdant Lush", count: 15 }, { name: "Vibrant Neon", count: 18 }, { name: "Warm Tangerine", count: 15 }];
+const main = document.querySelector('#griffin');
+let colors = { primary: {r:255, g:255, b:255}, secondary: {r:255, g:255, b:255}, tertiary: {r:255, g:255, b:255}, eye: {r:255, g:255, b:255} };
+let currentPattern = 'Griffin_Pattern00_HQ.png';
+let currentEyeShape = 'Eye00_Texture.png';
 
-<div class="viewer-container">
-    <model-viewer id="griffin" src="griffin-main.glb" camera-controls auto-rotate interaction-prompt="none" shadow-intensity="1" exposure="1.2" environment-image="neutral"></model-viewer>
-</div>
+// These are your default starting traits
+let activeParts = { 
+    eye: 'Mesh_Eyes_Normal', 
+    wing: 'manticore', 
+    crest: 'bestial', 
+    tail: 'fanned' 
+};
 
-<div class="sidebar">
-    <h2>GRIFFIN SYSTEM</h2>
-    
-    <details open><summary>EYES</summary><div class="button-stack">
-        <button class="part-btn" onclick="togglePart('eye', 'Mesh_Eyes_Normal')">Standard Eyes</button>
-        <button class="part-btn" onclick="togglePart('eye', 'Mesh_Eyes_Lashes')">Eyelash Eyes</button>
-        <hr style="border:0; border-top:1px solid #444; margin:5px 0;">
-        <select class="part-select" onchange="changeEyeShape(this.value)">
-            <option value="Eye00_Texture.png">Ordinary</option>
-            <option value="Eye01_Texture.png">Surprised</option>
-            <option value="Eye02_Texture.png">Cute</option>
-            <option value="Eye03_Texture.png">Creepy</option>
-            <option value="Eye04_Texture.png">Spooky</option>
-            <option value="Eye05_Texture.png">Swirly</option>
-            <option value="Eye06_Texture.png">Blank</option>
-            <option value="Eye07_Texture.png">Crossed Out</option>
-            <option value="Eye08_Texture.png">Starry</option>
-            <option value="Eye09_Texture.png">Lovely</option>
-            <option value="Eye10_Texture.png">Suspicious</option>
-            <option value="Eye11_Texture.png">Striking</option>
-        </select>
-    </div></details>
+// ... (Keep your existing color palette generation code here) ...
 
-    <details open><summary>CRESTS</summary><div class="button-stack">
-        <button class="part-btn" onclick="togglePart('crest', 'bestial')">BESTIAL</button>
-        <button class="part-btn" onclick="togglePart('crest', 'pinnacle')">PINNACLE</button>
-        <button class="part-btn" onclick="togglePart('crest', 'windswept')">WINDSWEPT</button>
-        <button class="part-btn" onclick="togglePart('crest', 'harpy')">HARPY</button>
-        <button class="part-btn" onclick="togglePart('crest', 'none')">NONE</button>
-    </div></details>
-
-    <details open><summary>WINGS</summary><div class="button-stack">
-        <button class="part-btn" onclick="togglePart('wing', 'heroic')">HEROIC</button>
-        <button class="part-btn" onclick="togglePart('wing', 'osprey')">OSPREY</button>
-        <button class="part-btn" onclick="togglePart('wing', 'manticore')">MANTICORE</button>
-        <button class="part-btn" onclick="togglePart('wing', 'scarab')">SCARAB</button>
-        <button class="part-btn" onclick="togglePart('wing', 'seraph')">SERAPH</button>
-        <button class="part-btn" onclick="togglePart('wing', 'none')">NONE</button>
-    </div></details>
-
-    <details open><summary>TAILS</summary><div class="button-stack">
-        <button class="part-btn" onclick="togglePart('tail', 'fanned')">FANNED</button>
-        <button class="part-btn" onclick="togglePart('tail', 'svelte')">SVELTE</button>
-        <button class="part-btn" onclick="togglePart('tail', 'tufted')">TUFTED</button>
-        <button class="part-btn" onclick="togglePart('tail', 'scorpio')">SCORPIO</button>
-        <button class="part-btn" onclick="togglePart('tail', 'none')">NONE</button>
-    </div></details>
-
-    <details open><summary>PATTERNS</summary><div class="button-stack">
-        <button class="part-btn" onclick="changePattern('Griffin_Pattern00_HQ.png')">DRIFTER</button>
-        <button class="part-btn" onclick="changePattern('Griffin_Pattern02_HQ.png')">DUOCHROME</button>
-        <button class="part-btn" onclick="changePattern('Griffin_Pattern01_HQ.png')">SHINING</button>
-        <button class="part-btn" onclick="changePattern('Griffin_Pattern03_HQ.png')">STEALTHY</button>
-        <button class="part-btn" onclick="changePattern('Griffin_Pattern04_HQ.png')">HARFANG</button>
-    </div></details>
-
-    <details><summary>PRIMARY COLOR</summary><div id="primary-container"></div></details>
-    <details><summary>SECONDARY COLOR</summary><div id="secondary-container"></div></details>
-    <details><summary>TERTIARY COLOR</summary><div id="tertiary-container"></div></details>
-    <details><summary>EYE COLOR</summary><div id="eye-container"></div></details>
-</div>
-
-<script>
-    const paletteData = [{ name: "Amethyst Wildflower", count: 12 }, { name: "Cerulean Sky", count: 14 }, { name: "Dreamy Lilac", count: 15 }, { name: "Dusty Taupe", count: 13 }, { name: "Earthy Umber", count: 15 }, { name: "Flaxen Ochre", count: 16 }, { name: "Florid Vermillion", count: 14 }, { name: "Forested Juniper", count: 14 }, { name: "Hazel Olive", count: 15 }, { name: "Lush Berry", count: 13 }, { name: "Misty Starlight", count: 13 }, { name: "Oceanic Sapphire", count: 15 }, { name: "Opulant Royalty", count: 14 }, { name: "Pale Pastel", count: 15 }, { name: "Rosy Sunset", count: 14 }, { name: "Russet Mahogany", count: 12 }, { name: "Seafoam Lagoon", count: 14 }, { name: "Shady Dark", count: 17 }, { name: "Smoky Dust", count: 13 }, { name: "Sunny Amber", count: 14 }, { name: "Verdant Lush", count: 15 }, { name: "Vibrant Neon", count: 18 }, { name: "Warm Tangerine", count: 15 }];
-    const main = document.querySelector('#griffin');
-    let colors = { primary: {r:255, g:255, b:255}, secondary: {r:255, g:255, b:255}, tertiary: {r:255, g:255, b:255}, eye: {r:255, g:255, b:255} };
-    let currentPattern = 'Griffin_Pattern00_HQ.png';
-    let currentEyeShape = 'Eye00_Texture.png';
-    
-    // Active state tracking
-    let activeParts = { eye: 'Mesh_Eyes_Normal', wing: 'heroic', crest: 'bestial', tail: 'fanned' };
-
-    ["primary", "secondary", "tertiary", "eye"].forEach(type => {
-        const container = document.getElementById(`${type}-container`);
-        paletteData.forEach(p => {
-            const det = document.createElement('details'); det.className = "palette-group"; det.innerHTML = `<summary style="font-size:11px; color:#aaa;">${p.name}</summary><div class="color-grid"></div>`; container.appendChild(det);
-            const grid = det.querySelector('.color-grid');
-            for(let i=0; i<p.count; i++) {
-                const s = document.createElement('div'); s.className = "swatch"; const h = (i * 360) / p.count; s.style.background = `hsl(${h}, 70%, 55%)`;
-                s.onclick = () => { colors[type] = hslToRgb(h, 0.7, 0.55); updateAll(); }; grid.appendChild(s);
-            }
-        });
-    });
-
-    async function processTexture(imgSrc, isEye = false) {
-        const img = new Image(); img.crossOrigin = "anonymous"; img.src = imgSrc; await img.decode();
-        const canvas = document.createElement('canvas'); canvas.width = img.width; canvas.height = img.height;
-        const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0);
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height), data = imageData.data;
-        for (let i = 0; i < data.length; i += 4) {
-            const r = data[i], g = data[i+1], b = data[i+2];
-            if (isEye) {
-                if (r > 120 && g > 100) { 
-                    const factor = (r + g) / 510;
-                    data[i] = colors.eye.r * factor; data[i+1] = colors.eye.g * factor; data[i+2] = colors.eye.b * factor;
-                } else { data[i] = 0; data[i+1] = 0; data[i+2] = 0; }
-                data[i+3] = 255;
-            } else {
-                const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-                if (lum < 0.05) continue;
-                let target = null;
-                if (r > 60 && r > g * 1.3 && r > b * 1.3) target = colors.primary;
-                else if (r > 100 && g > 100 && b < 140) target = colors.secondary;
-                else if (b > 50 || (r > 100 && b > 100)) target = colors.tertiary;
-                if (target) { data[i] = target.r; data[i+1] = target.g; data[i+2] = target.b; }
-            }
+async function processTexture(imgSrc, isEye = false) {
+    const img = new Image(); img.crossOrigin = "anonymous"; img.src = imgSrc; await img.decode();
+    const canvas = document.createElement('canvas'); canvas.width = img.width; canvas.height = img.height;
+    const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height), data = imageData.data;
+    for (let i = 0; i < data.length; i += 4) {
+        const r = data[i], g = data[i+1], b = data[i+2];
+        if (isEye) {
+            if (r > 120 && g > 100) { 
+                const factor = (r + g) / 510;
+                data[i] = colors.eye.r * factor; data[i+1] = colors.eye.g * factor; data[i+2] = colors.eye.b * factor;
+            } else { data[i] = 0; data[i+1] = 0; data[i+2] = 0; }
+            data[i+3] = 255;
+        } else {
+            const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            if (lum < 0.05) continue;
+            let target = null;
+            if (r > 60 && r > g * 1.3 && r > b * 1.3) target = colors.primary;
+            else if (r > 100 && g > 100 && b < 140) target = colors.secondary;
+            else if (b > 50 || (r > 100 && b > 100)) target = colors.tertiary;
+            if (target) { data[i] = target.r; data[i+1] = target.g; data[i+2] = target.b; }
         }
-        ctx.putImageData(imageData, 0, 0); return canvas.toDataURL();
     }
+    ctx.putImageData(imageData, 0, 0); return canvas.toDataURL();
+}
 
-    function togglePart(type, name) {
-        activeParts[type] = name;
-        if (!main.model) return;
-        
-        const scene = main[Object.getOwnPropertySymbols(main).find(s => s.description === 'scene')];
-        if (!scene) return;
+function togglePart(type, name) {
+    activeParts[type] = name;
+    if (!main.model) return;
+    
+    // Access the scene graph directly
+    const scene = main[Object.getOwnPropertySymbols(main).find(s => s.description === 'scene')];
+    if (!scene) return;
 
-        scene.traverse((obj) => {
-            if (obj.isMesh || obj.isGroup) {
-                const n = obj.name.toLowerCase();
-                // Check if object name matches the category and name
-                if (type === 'eye') {
-                    if (n.includes('mesh_eyes_normal')) obj.visible = (name === 'Mesh_Eyes_Normal');
-                    if (n.includes('mesh_eyes_lashes')) obj.visible = (name === 'Mesh_Eyes_Lashes');
-                } else {
-                    if (n.includes(type)) {
-                        obj.visible = (n.includes(name.toLowerCase()));
-                    }
-                }
-            }
-        });
-    }
+    // List of keywords we use for each category to identify the meshes
+    const keywords = {
+        wing: ['heroic', 'osprey', 'manticore', 'scarab', 'seraph'],
+        crest: ['bestial', 'pinnacle', 'windswept', 'harpy'],
+        tail: ['fanned', 'svelte', 'tufted', 'scorpio'],
+        eye: ['mesh_eyes_normal', 'mesh_eyes_lashes']
+    };
 
-    async function updateAll() {
-        if (!main.model) return;
-        
-        const bodyBake = await processTexture(currentPattern);
-        const wingBake = await processTexture('Griffin_Wings.png');
-        const tcBake = await processTexture('Griffin_Tails_Crests.png');
-        const eyeBake = await processTexture(currentEyeShape, true);
-        
-        for (const mat of main.model.materials) {
-            const texData = (mat.name === "Mat_GriffinBody") ? bodyBake :
-                            (mat.name === "Mat_Wings") ? wingBake :
-                            (mat.name === "Mat_Tails_Crests") ? tcBake :
-                            (mat.name === "Mat_Eyes") ? eyeBake : null;
+    scene.traverse((obj) => {
+        if (obj.isMesh) {
+            const objName = obj.name.toLowerCase();
             
-            if (texData) {
-                const tex = await main.createTexture(texData);
-                if (mat.pbrMetallicRoughness.baseColorTexture) mat.pbrMetallicRoughness.baseColorTexture.setTexture(tex);
+            // Check if this mesh belongs to the category we are toggling
+            const categoryKeywords = keywords[type];
+            if (categoryKeywords && categoryKeywords.some(k => objName.includes(k))) {
+                // Set visibility: True if the name matches the chosen trait, False otherwise
+                obj.visible = objName.includes(name.toLowerCase());
             }
         }
-        
-        // Re-apply visibility for all types
-        Object.keys(activeParts).forEach(type => togglePart(type, activeParts[type]));
-    }
+    });
+}
 
-    function changeEyeShape(f) { currentEyeShape = f; updateAll(); }
-    function changePattern(f) { currentPattern = f; updateAll(); }
-    function hslToRgb(h, s, l) { const f = (n, k = (n + h / 30) % 12) => l - s * Math.min(l, 1 - l) * Math.max(Math.min(k - 3, 9 - k, 1), -1); return { r: Math.round(f(0) * 255), g: Math.round(f(8) * 255), b: Math.round(f(4) * 255) }; }
+async function updateAll() {
+    if (!main.model) return;
     
-    main.addEventListener('load', updateAll);
-</script>
-</body>
-</html>
+    // Process all textures
+    const bodyBake = await processTexture(currentPattern);
+    const wingBake = await processTexture('Griffin_Wings.png');
+    const tcBake = await processTexture('Griffin_Tails_Crests.png');
+    const eyeBake = await processTexture(currentEyeShape, true);
+    
+    for (const mat of main.model.materials) {
+        let texData = null;
+        if (mat.name === "Mat_GriffinBody") texData = bodyBake;
+        if (mat.name === "Mat_Wings") texData = wingBake;
+        if (mat.name === "Mat_Tails_Crests") texData = tcBake;
+        if (mat.name === "Mat_Eyes") texData = eyeBake;
+        
+        if (texData) {
+            const tex = await main.createTexture(texData);
+            if (mat.pbrMetallicRoughness.baseColorTexture) {
+                mat.pbrMetallicRoughness.baseColorTexture.setTexture(tex);
+            }
+        }
+    }
+    
+    // Apply the current visibility state to clear the "blob"
+    Object.keys(activeParts).forEach(category => {
+        togglePart(category, activeParts[category]);
+    });
+}
+
+function changeEyeShape(f) { currentEyeShape = f; updateAll(); }
+function changePattern(f) { currentPattern = f; updateAll(); }
+function hslToRgb(h, s, l) { const f = (n, k = (n + h / 30) % 12) => l - s * Math.min(l, 1 - l) * Math.max(Math.min(k - 3, 9 - k, 1), -1); return { r: Math.round(f(0) * 255), g: Math.round(f(8) * 255), b: Math.round(f(4) * 255) }; }
+
+// This ensures the blob is cleaned up immediately when the model finishes loading
+main.addEventListener('load', () => {
+    updateAll();
+});
