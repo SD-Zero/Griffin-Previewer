@@ -98,7 +98,6 @@
     };
     let currentPattern = 'Griffin_Pattern00_HQ.png';
 
-    // Color UI Generation
     ["primary", "secondary", "tertiary"].forEach(type => {
         const container = document.getElementById(`${type}-container`);
         paletteData.forEach(p => {
@@ -132,36 +131,38 @@
 
         for (let i = 0; i < data.length; i += 4) {
             const r = data[i], g = data[i+1], b = data[i+2];
-            
-            // 1. BEAK PROTECTION: If it's a dark shaded pixel, leave it alone entirely.
             const brightness = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-            if (brightness < 0.15) continue; 
+            
+            // BEAK PROTECTION: Still skipping extremely deep shadows to keep the 3D look
+            if (brightness < 0.08) continue; 
 
             let target = null;
             let refB = 1.0;
 
-            // 2. HARD CHANNEL SEPARATION
-            // Primary = Pure Red (High R, Low G/B)
-            if (r > 100 && g < 80 && b < 80) { 
+            // 1. IMPROVED DETECTION (Looser thresholds to catch stray pixels)
+            // PRIMARY (Red areas like the beak spot)
+            if (r > 70 && g < 120 && b < 120 && r > g && r > b) { 
                 target = colors.primary; 
-                refB = r / 255; 
+                refB = brightness / 0.5; // Normalizing against mid-red
             }
-            // Secondary = Pure Yellow (High R, High G, Low B)
-            else if (r > 100 && g > 100 && b < 80) { 
+            // SECONDARY (Yellow areas)
+            else if (r > 100 && g > 100 && b < 120) { 
                 target = colors.secondary; 
-                refB = (r + g) / 510; 
+                refB = brightness / 0.85; 
             }
-            // Tertiary = Blue, Hot Pink, or Green (Isolated channels)
-            else if (b > 100 || (r > 100 && b > 100) || (g > 100 && r < 80)) { 
+            // TERTIARY (Blue/Pink/Nose Swirls)
+            else if (b > 60 || (r > 80 && b > 80) || (g > 80 && r < 100)) { 
                 target = colors.tertiary; 
-                refB = Math.max(r,g,b) / 255;
+                // NOSE FIX: Use a lower reference for blue areas so they stay darkened/shaded correctly
+                refB = brightness / 0.6;
             }
 
             if (target) {
-                // Apply color but use the pixel's relative intensity to keep fur texture/shading
-                data[i] = target.r * refB;
-                data[i+1] = target.g * refB;
-                data[i+2] = target.b * refB;
+                // Clamp intensity so it doesn't get too neon unless the swatch is
+                const finalInt = Math.min(refB, 1.1);
+                data[i] = target.r * finalInt;
+                data[i+1] = target.g * finalInt;
+                data[i+2] = target.b * finalInt;
             }
         }
         ctx.putImageData(imageData, 0, 0);
