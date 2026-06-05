@@ -36,11 +36,13 @@
 <body>
 
 <div class="viewer-container">
-    <model-viewer id="griffin" src="griffin.glb" camera-controls auto-rotate interaction-prompt="none" shadow-intensity="1" exposure="1.2" environment-image="neutral" camera-target="0m 0m 0m" min-field-of-view="25deg"></model-viewer>
-    <model-viewer id="crest-v" src="" interaction-prompt="none" camera-target="0m 0m 0m" min-field-of-view="25deg"></model-viewer>
-    <model-viewer id="wings-v" src="" interaction-prompt="none" camera-target="0m 0m 0m" min-field-of-view="25deg"></model-viewer>
-    <model-viewer id="tail-v" src="" interaction-prompt="none" camera-target="0m 0m 0m" min-field-of-view="25deg"></model-viewer>
-    <model-viewer id="eyes-v" src="Griffin_LQ_Eyes_Mesh.glb" interaction-prompt="none" camera-target="0m 0m 0m" min-field-of-view="25deg"></model-viewer>
+    <model-viewer id="griffin" src="griffin.glb" camera-controls auto-rotate interaction-prompt="none" shadow-intensity="1" exposure="1.2" environment-image="neutral"></model-viewer>
+    
+    <model-viewer id="crest-v" src="" interaction-prompt="none"></model-viewer>
+    <model-viewer id="wings-v" src="" interaction-prompt="none"></model-viewer>
+    <model-viewer id="tail-v" src="" interaction-prompt="none"></model-viewer>
+    
+    <model-viewer id="eyes-v" src="Griffin_LQ_Eyes_Mesh.glb" interaction-prompt="none"></model-viewer>
 </div>
 
 <div class="sidebar">
@@ -164,14 +166,14 @@
             const r = data[i], g = data[i+1], b = data[i+2];
             
             if (isEye) {
-                // RED stays BLACK. YELLOW gets COLORED.
-                // Yellow pixels have high Red AND Green. Background pixels are just Red.
-                if (g > 50 && r > 50) { 
+                // If it's the Yellow part of the texture (R and G are high)
+                if (r > 100 && g > 100) { 
                     const lum = (r + g + b) / (255 * 3);
                     data[i] = colors.eye.r * lum;
                     data[i+1] = colors.eye.g * lum;
                     data[i+2] = colors.eye.b * lum;
                 } else {
+                    // Force the Red and Black parts of the texture to stay Black
                     data[i] = 0; data[i+1] = 0; data[i+2] = 0;
                 }
             } else {
@@ -236,37 +238,23 @@
             for (const mat of eyeViewer.model.materials) {
                 const tex = await eyeViewer.createTexture(eyeBake);
                 if (mat.pbrMetallicRoughness.baseColorTexture) mat.pbrMetallicRoughness.baseColorTexture.setTexture(tex);
-                mat.pbrMetallicRoughness.setBaseColorFactor([1, 1, 1, 1]);
             }
         }
     }
 
-    function changeEyeModel(file) {
-        eyeViewer.setAttribute('src', file);
-        eyeViewer.addEventListener('model-visibility', () => updateAll(), { once: true });
-    }
-
-    function changeEyeShape(file) {
-        currentEyeShape = file;
-        updateAll();
-    }
-
-    function hslToRgb(h, s, l) {
-        const f = (n, k = (n + h / 30) % 12) => l - s * Math.min(l, 1 - l) * Math.max(Math.min(k - 3, 9 - k, 1), -1);
-        return { r: Math.round(f(0) * 255), g: Math.round(f(8) * 255), b: Math.round(f(4) * 255) };
-    }
-
     function sync() {
+        // GET GRIFFIN CAMERA VALUES
         const orbit = main.getCameraOrbit();
         const fov = main.getFieldOfView();
+        const target = main.getCameraTarget();
         
-        const viewers = [...Object.values(parts), eyeViewer];
-        viewers.forEach(v => {
+        const layers = [...Object.values(parts), eyeViewer];
+        layers.forEach(v => {
             if(v.getAttribute('src')) {
+                // FORCE OVERWRITE CAMERA ON EVERY LAYER
                 v.cameraOrbit = `${orbit.theta}rad ${orbit.phi}rad ${orbit.radius}m`;
                 v.fieldOfView = `${fov}deg`;
-                // Both viewers target exact 0,0,0 to prevent "floating"
-                v.cameraTarget = "0m 0m 0m";
+                v.cameraTarget = `${target.x}m ${target.y}m ${target.z}m`;
                 v.jumpCameraToGoal();
             }
         });
@@ -274,20 +262,13 @@
     }
     sync();
 
-    function changePart(type, file) {
-        const v = parts[type]; v.style.visibility = "hidden";
-        if (!file) { v.removeAttribute('src'); return; }
-        v.setAttribute('src', file);
-        v.addEventListener('model-visibility', () => updateAll(), { once: true });
-    }
-
+    function changeEyeModel(file) { eyeViewer.setAttribute('src', file); eyeViewer.addEventListener('model-visibility', updateAll, { once: true }); }
+    function changeEyeShape(file) { currentEyeShape = file; updateAll(); }
+    function changePart(type, file) { const v = parts[type]; v.style.visibility = "hidden"; if (!file) { v.removeAttribute('src'); return; } v.setAttribute('src', file); v.addEventListener('model-visibility', updateAll, { once: true }); }
     function changePattern(file) { currentPattern = file; updateAll(); }
+    function hslToRgb(h, s, l) { const f = (n, k = (n + h / 30) % 12) => l - s * Math.min(l, 1 - l) * Math.max(Math.min(k - 3, 9 - k, 1), -1); return { r: Math.round(f(0) * 255), g: Math.round(f(8) * 255), b: Math.round(f(4) * 255) }; }
     
-    window.onload = () => { 
-        changePart('crest', 'bestial.glb'); 
-        changePart('wings', 'manticore.glb'); 
-        changePart('tail', 'fanned.glb'); 
-    };
+    window.onload = () => { changePart('crest', 'bestial.glb'); changePart('wings', 'manticore.glb'); changePart('tail', 'fanned.glb'); };
     main.addEventListener('model-visibility', updateAll);
 </script>
 </body>
