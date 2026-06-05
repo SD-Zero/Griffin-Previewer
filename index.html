@@ -7,30 +7,55 @@
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <style>
         body { margin: 0; background: #111; color: white; font-family: sans-serif; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Loading Screen */
+        #loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #111; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 100;
+            transition: opacity 0.5s ease;
+        }
+        .spinner { width: 50px; height: 50px; border: 5px solid #333; border-top: 5px solid #ff9d00; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
         .viewer-container { flex: 1; position: relative; background: radial-gradient(#333, #000); }
         model-viewer { width: 100%; height: 100%; --poster-color: transparent; }
-        .sidebar { width: 320px; background: #222; border-left: 2px solid #ff9d00; display: flex; flex-direction: column; overflow-y: auto; padding: 10px; }
+        
+        .sidebar { width: 320px; background: #222; border-left: 2px solid #ff9d00; display: flex; flex-direction: column; overflow-y: auto; padding: 10px; transition: all 0.3s ease; }
+        
         h2 { font-size: 14px; color: #ff9d00; text-align: center; letter-spacing: 2px; margin: 10px 0; border-bottom: 1px solid #444; padding-bottom: 10px; }
         
         .random-box { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #444; }
-        .rnd-btn { background: #ff9d00; color: #000; border: none; padding: 10px; font-weight: bold; font-size: 10px; cursor: pointer; border-radius: 4px; text-transform: uppercase; transition: transform 0.1s; }
-        .rnd-btn:active { transform: scale(0.95); }
+        .rnd-btn { background: #ff9d00; color: #000; border: none; padding: 10px; font-weight: bold; font-size: 10px; cursor: pointer; border-radius: 4px; text-transform: uppercase; }
         .rnd-btn:hover { background: #fff; }
 
         details { margin-bottom: 5px; background: #2d2d2d; border-radius: 4px; }
         summary { padding: 12px; font-weight: bold; cursor: pointer; background: #333; display: flex; justify-content: space-between; font-size: 13px; list-style: none; }
         summary::-webkit-details-marker { display: none; }
+        
         .button-stack { display: flex; flex-direction: column; padding: 10px; gap: 5px; }
         button.part-btn { background: #444; color: #ddd; border: 1px solid #555; padding: 10px; text-align: left; border-radius: 4px; cursor: pointer; font-size: 12px; }
         button.part-btn:hover { background: #555; border-color: #ff9d00; }
         select.part-select { background: #444; color: white; border: 1px solid #555; padding: 10px; border-radius: 4px; cursor: pointer; font-size: 12px; width: 100%; }
+        
         .palette-group { background: #1a1a1a; padding: 5px; border-top: 1px solid #333; }
         .color-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 10px; }
-        .swatch { width: 100%; aspect-ratio: 1; border-radius: 3px; cursor: pointer; border: 1px solid #444; transition: transform 0.1s; }
-        .swatch:hover { transform: scale(1.1); border-color: white; }
+        .swatch { width: 100%; aspect-ratio: 1; border-radius: 3px; cursor: pointer; border: 1px solid #444; }
+
+        /* Mobile Optimization */
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; height: 40vh; border-left: none; border-top: 2px solid #ff9d00; }
+            .viewer-container { height: 60vh; }
+        }
     </style>
 </head>
 <body>
+
+<div id="loading-overlay">
+    <div class="spinner"></div>
+    <p>Summoning Griffin...</p>
+</div>
 
 <div class="viewer-container">
     <model-viewer id="griffin" src="griffin-main.glb" camera-controls auto-rotate interaction-prompt="none" shadow-intensity="1" exposure="1.2" environment-image="neutral"></model-viewer>
@@ -132,24 +157,7 @@
         });
     });
 
-    async function updateAll() {
-        if (!main.model) return;
-        const bodyBake = await processTexture(currentPattern);
-        const wingBake = await processTexture('Griffin_Wings.png');
-        const tcBake = await processTexture('Griffin_Tails_Crests.png');
-        const eyeBake = await processTexture(currentEyeShape, true);
-        
-        const materialMap = { "Mat_GriffinBody": bodyBake, "Mat_Wings": wingBake, "Mat_Tails_Crests": tcBake, "Mat_Eyes": eyeBake };
-        for (const mat of main.model.materials) {
-            const texData = materialMap[mat.name];
-            if (texData) {
-                const tex = await main.createTexture(texData);
-                if (mat.pbrMetallicRoughness.baseColorTexture) mat.pbrMetallicRoughness.baseColorTexture.setTexture(tex);
-            }
-        }
-        Object.keys(activeParts).forEach(type => togglePart(type, activeParts[type]));
-    }
-
+    // Randomizers
     function randomizeTraits() {
         activeParts.eye = Math.random() > 0.5 ? 'Mesh_Eyes_Normal' : 'Mesh_Eyes_Lashes';
         activeParts.crest = crestList[Math.floor(Math.random() * crestList.length)];
@@ -157,18 +165,14 @@
         activeParts.tail = tailList[Math.floor(Math.random() * tailList.length)];
         currentPattern = patternList[Math.floor(Math.random() * patternList.length)];
         currentEyeShape = eyeTextureList[Math.floor(Math.random() * eyeTextureList.length)];
-        
         document.getElementById('eyeShapeSelect').value = currentEyeShape;
-        updateAll(); // Force visual update
+        updateAll();
     }
 
     function randomizeColors() {
         const rnd = () => hslToRgb(Math.random() * 360, 0.7, 0.55);
-        colors.primary = rnd();
-        colors.secondary = rnd();
-        colors.tertiary = rnd();
-        colors.eye = rnd();
-        updateAll(); // Force visual update
+        colors.primary = rnd(); colors.secondary = rnd(); colors.tertiary = rnd(); colors.eye = rnd();
+        updateAll();
     }
 
     async function processTexture(imgSrc, isEye = false) {
@@ -220,6 +224,28 @@
         });
     }
 
+    async function updateAll() {
+        if (!main.model) return;
+        const bodyBake = await processTexture(currentPattern);
+        const wingBake = await processTexture('Griffin_Wings.png');
+        const tcBake = await processTexture('Griffin_Tails_Crests.png');
+        const eyeBake = await processTexture(currentEyeShape, true);
+        const materialMap = { "Mat_GriffinBody": bodyBake, "Mat_Wings": wingBake, "Mat_Tails_Crests": tcBake, "Mat_Eyes": eyeBake };
+        
+        for (const mat of main.model.materials) {
+            const texData = materialMap[mat.name];
+            if (texData) {
+                const tex = await main.createTexture(texData);
+                if (mat.pbrMetallicRoughness.baseColorTexture) mat.pbrMetallicRoughness.baseColorTexture.setTexture(tex);
+            }
+        }
+        Object.keys(activeParts).forEach(type => togglePart(type, activeParts[type]));
+        
+        // Hide loading screen once first bake is done
+        const loader = document.getElementById('loading-overlay');
+        if (loader) { loader.style.opacity = '0'; setTimeout(() => loader.remove(), 500); }
+    }
+
     ["primary", "secondary", "tertiary", "eye"].forEach(type => {
         const container = document.getElementById(`${type}-container`);
         paletteData.forEach(p => {
@@ -235,6 +261,7 @@
     function changeEyeShape(f) { currentEyeShape = f; updateAll(); }
     function changePattern(f) { currentPattern = f; updateAll(); }
     function hslToRgb(h, s, l) { const f = (n, k = (n + h / 30) % 12) => l - s * Math.min(l, 1 - l) * Math.max(Math.min(k - 3, 9 - k, 1), -1); return { r: Math.round(f(0) * 255), g: Math.round(f(8) * 255), b: Math.round(f(4) * 255) }; }
+    
     main.addEventListener('load', updateAll);
 </script>
 </body>
