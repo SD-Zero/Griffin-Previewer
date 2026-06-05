@@ -11,6 +11,11 @@
         model-viewer { width: 100%; height: 100%; --poster-color: transparent; }
         .sidebar { width: 320px; background: #222; border-left: 2px solid #ff9d00; display: flex; flex-direction: column; overflow-y: auto; padding: 10px; }
         h2 { font-size: 14px; color: #ff9d00; text-align: center; letter-spacing: 2px; margin: 10px 0; border-bottom: 1px solid #444; padding-bottom: 10px; }
+        
+        .random-box { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #444; }
+        .rnd-btn { background: #ff9d00; color: #000; border: none; padding: 8px; font-weight: bold; font-size: 10px; cursor: pointer; border-radius: 4px; text-transform: uppercase; }
+        .rnd-btn:hover { background: #fff; }
+
         details { margin-bottom: 5px; background: #2d2d2d; border-radius: 4px; }
         summary { padding: 12px; font-weight: bold; cursor: pointer; background: #333; display: flex; justify-content: space-between; font-size: 13px; }
         .button-stack { display: flex; flex-direction: column; padding: 10px; gap: 5px; }
@@ -32,11 +37,16 @@
 <div class="sidebar">
     <h2>GRIFFIN SYSTEM</h2>
     
-    <details open><summary>EYES</summary><div class="button-stack">
+    <div class="random-box">
+        <button class="rnd-btn" onclick="randomizeTraits()">Random Traits</button>
+        <button class="rnd-btn" onclick="randomizeColors()">Random Colors</button>
+    </div>
+
+    <details open><summary>EYE SHAPES</summary><div class="button-stack">
         <button class="part-btn" onclick="togglePart('eye', 'Mesh_Eyes_Normal')">Standard Eyes</button>
         <button class="part-btn" onclick="togglePart('eye', 'Mesh_Eyes_Lashes')">Eyelash Eyes</button>
         <hr style="border:0; border-top:1px solid #444; margin:5px 0;">
-        <select class="part-select" onchange="changeEyeShape(this.value)">
+        <select id="eyeShapeSelect" class="part-select" onchange="changeEyeShape(this.value)">
             <option value="Eye00_Texture.png">Ordinary</option>
             <option value="Eye01_Texture.png">Surprised</option>
             <option value="Eye02_Texture.png">Cute</option>
@@ -52,7 +62,7 @@
         </select>
     </div></details>
 
-    <details open><summary>CRESTS</summary><div class="button-stack">
+    <details><summary>CRESTS</summary><div class="button-stack">
         <button class="part-btn" onclick="togglePart('crest', 'bestial')">BESTIAL</button>
         <button class="part-btn" onclick="togglePart('crest', 'pinnacle')">PINNACLE</button>
         <button class="part-btn" onclick="togglePart('crest', 'windswept')">WINDSWEPT</button>
@@ -60,7 +70,7 @@
         <button class="part-btn" onclick="togglePart('crest', 'none')">NONE</button>
     </div></details>
 
-    <details open><summary>WINGS</summary><div class="button-stack">
+    <details><summary>WINGS</summary><div class="button-stack">
         <button class="part-btn" onclick="togglePart('wing', 'heroic')">HEROIC</button>
         <button class="part-btn" onclick="togglePart('wing', 'osprey')">OSPREY</button>
         <button class="part-btn" onclick="togglePart('wing', 'manticore')">MANTICORE</button>
@@ -69,7 +79,7 @@
         <button class="part-btn" onclick="togglePart('wing', 'none')">NONE</button>
     </div></details>
 
-    <details open><summary>TAILS</summary><div class="button-stack">
+    <details><summary>TAILS</summary><div class="button-stack">
         <button class="part-btn" onclick="togglePart('tail', 'fanned')">FANNED</button>
         <button class="part-btn" onclick="togglePart('tail', 'svelte')">SVELTE</button>
         <button class="part-btn" onclick="togglePart('tail', 'tufted')">TUFTED</button>
@@ -77,7 +87,7 @@
         <button class="part-btn" onclick="togglePart('tail', 'quetzal')">QUETZAL</button>
     </div></details>
 
-    <details open><summary>PATTERNS</summary><div class="button-stack">
+    <details><summary>PATTERNS</summary><div class="button-stack">
         <button class="part-btn" onclick="changePattern('Griffin_Pattern00_HQ.png')">DRIFTER</button>
         <button class="part-btn" onclick="changePattern('Griffin_Pattern02_HQ.png')">DUOCHROME</button>
         <button class="part-btn" onclick="changePattern('Griffin_Pattern01_HQ.png')">SHINING</button>
@@ -92,22 +102,63 @@
 </div>
 
 <script>
+    // --- Data Definitions ---
     const paletteData = [{ name: "Amethyst Wildflower", count: 12 }, { name: "Cerulean Sky", count: 14 }, { name: "Dreamy Lilac", count: 15 }, { name: "Dusty Taupe", count: 13 }, { name: "Earthy Umber", count: 15 }, { name: "Flaxen Ochre", count: 16 }, { name: "Florid Vermillion", count: 14 }, { name: "Forested Juniper", count: 14 }, { name: "Hazel Olive", count: 15 }, { name: "Lush Berry", count: 13 }, { name: "Misty Starlight", count: 13 }, { name: "Oceanic Sapphire", count: 15 }, { name: "Opulant Royalty", count: 14 }, { name: "Pale Pastel", count: 15 }, { name: "Rosy Sunset", count: 14 }, { name: "Russet Mahogany", count: 12 }, { name: "Seafoam Lagoon", count: 14 }, { name: "Shady Dark", count: 17 }, { name: "Smoky Dust", count: 13 }, { name: "Sunny Amber", count: 14 }, { name: "Verdant Lush", count: 15 }, { name: "Vibrant Neon", count: 18 }, { name: "Warm Tangerine", count: 15 }];
+    
+    const crests = ['bestial', 'pinnacle', 'windswept', 'harpy', 'none'];
+    const wings = ['heroic', 'osprey', 'manticore', 'scarab', 'seraph', 'none'];
+    const tails = ['fanned', 'svelte', 'tufted', 'scorpio', 'quetzal'];
+    const patterns = ['Griffin_Pattern00_HQ.png', 'Griffin_Pattern02_HQ.png', 'Griffin_Pattern01_HQ.png', 'Griffin_Pattern03_HQ.png', 'Griffin_Pattern04_HQ.png'];
+    const eyeShapes = Array.from({length: 12}, (_, i) => `Eye${i.toString().padStart(2, '0')}_Texture.png`);
+
     const main = document.querySelector('#griffin');
     let colors = { primary: {r:255, g:255, b:255}, secondary: {r:255, g:255, b:255}, tertiary: {r:255, g:255, b:255}, eye: {r:255, g:255, b:255} };
     let currentPattern = 'Griffin_Pattern00_HQ.png';
     let currentEyeShape = 'Eye00_Texture.png';
-    
-    let activeParts = { 
-        eye: 'Mesh_Eyes_Normal', 
-        crest: 'bestial', 
-        wing: 'manticore', 
-        tail: 'fanned' 
-    };
+    let activeParts = { eye: 'Mesh_Eyes_Normal', crest: 'bestial', wing: 'manticore', tail: 'fanned' };
 
     const offscreenCanvas = document.createElement('canvas');
     const offscreenCtx = offscreenCanvas.getContext('2d', { willReadFrequently: true });
 
+    // --- Accordion Logic ---
+    document.querySelectorAll('details').forEach((det) => {
+        det.addEventListener('toggle', (e) => {
+            if (det.open) {
+                document.querySelectorAll('details').forEach((other) => {
+                    if (other !== det) other.removeAttribute('open');
+                });
+            }
+        });
+    });
+
+    // --- Randomization Functions ---
+    function randomizeTraits() {
+        activeParts.eye = Math.random() > 0.5 ? 'Mesh_Eyes_Normal' : 'Mesh_Eyes_Lashes';
+        activeParts.crest = crests[Math.floor(Math.random() * crests.length)];
+        activeParts.wing = wings[Math.floor(Math.random() * wings.length)];
+        activeParts.tail = tails[Math.floor(Math.random() * tails.length)];
+        currentPattern = patterns[Math.floor(Math.random() * patterns.length)];
+        currentEyeShape = eyeShapes[Math.floor(Math.random() * eyeShapes.length)];
+        
+        // Update UI select box for eyes
+        document.getElementById('eyeShapeSelect').value = currentEyeShape;
+        updateAll();
+    }
+
+    function randomizeColors() {
+        // NOTE: Later we will change this to pull from your hex code list.
+        // For now, it picks random HSL colors.
+        const getRandomColor = () => hslToRgb(Math.random() * 360, 0.7, 0.55);
+        
+        colors.primary = getRandomColor();
+        colors.secondary = getRandomColor();
+        colors.tertiary = getRandomColor();
+        colors.eye = getRandomColor();
+        
+        updateAll();
+    }
+
+    // --- Core Logic ---
     ["primary", "secondary", "tertiary", "eye"].forEach(type => {
         const container = document.getElementById(`${type}-container`);
         paletteData.forEach(p => {
@@ -125,7 +176,6 @@
         offscreenCanvas.width = img.width; offscreenCanvas.height = img.height;
         offscreenCtx.drawImage(img, 0, 0);
         const imageData = offscreenCtx.getImageData(0, 0, offscreenCanvas.width, offscreenCanvas.height), data = imageData.data;
-        
         for (let i = 0; i < data.length; i += 4) {
             const r = data[i], g = data[i+1], b = data[i+2];
             if (isEye) {
@@ -137,23 +187,10 @@
             } else {
                 const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
                 if (lum < 0.03) continue;
-                
                 let target = null;
-                
-                // 1. Primary Red (Must be very red, not yellow-red)
-                if (r > 60 && r > g * 1.5 && r > b * 1.5) {
-                    target = colors.primary;
-                }
-                // 2. Secondary (Catch BOTH Yellow and Neon Green)
-                // Yellow = High Red + High Green. Green = High Green + Low Red.
-                else if (g > 70 && ( (r > 70) || (g > r * 1.1) ) && b < 170) {
-                    target = colors.secondary;
-                }
-                // 3. Tertiary (Blue/Purple)
-                else if (b > 50 || (r > 100 && b > 100)) {
-                    target = colors.tertiary;
-                }
-                
+                if (r > 60 && r > g * 1.5 && r > b * 1.5) target = colors.primary;
+                else if (g > 70 && ((r > 70) || (g > r * 1.1)) && b < 170) target = colors.secondary;
+                else if (b > 50 || (r > 100 && b > 100)) target = colors.tertiary;
                 if (target) { data[i] = target.r; data[i+1] = target.g; data[i+2] = target.b; }
             }
         }
@@ -163,15 +200,9 @@
     function togglePart(type, name) {
         activeParts[type] = name;
         if (!main.model) return;
-        
         const sceneSymbol = Object.getOwnPropertySymbols(main).find(s => s.description === 'scene');
         const scene = main[sceneSymbol];
         if (!scene) return;
-
-        const crests = ['bestial', 'pinnacle', 'windswept', 'harpy'];
-        const wings = ['heroic', 'osprey', 'manticore', 'scarab', 'seraph'];
-        const tails = ['fanned', 'svelte', 'tufted', 'scorpio', 'quetzal'];
-
         scene.traverse((obj) => {
             if (obj.isMesh || obj.isGroup) {
                 const nodeName = obj.name.toLowerCase();
@@ -183,10 +214,7 @@
                     if (type === 'crest' && crests.includes(nodeName)) categoryMatch = true;
                     if (type === 'wing' && wings.includes(nodeName)) categoryMatch = true;
                     if (type === 'tail' && tails.includes(nodeName)) categoryMatch = true;
-
-                    if (categoryMatch) {
-                        obj.visible = (nodeName === name.toLowerCase());
-                    }
+                    if (categoryMatch) obj.visible = (nodeName === name.toLowerCase());
                 }
             }
         });
@@ -194,29 +222,18 @@
 
     async function updateAll() {
         if (!main.model) return;
-        
         const bodyBake = await processTexture(currentPattern);
         const wingBake = await processTexture('Griffin_Wings.png');
         const tcBake = await processTexture('Griffin_Tails_Crests.png');
         const eyeBake = await processTexture(currentEyeShape, true);
-        
-        const materialMap = {
-            "Mat_GriffinBody": bodyBake,
-            "Mat_Wings": wingBake,
-            "Mat_Tails_Crests": tcBake,
-            "Mat_Eyes": eyeBake
-        };
-
+        const materialMap = { "Mat_GriffinBody": bodyBake, "Mat_Wings": wingBake, "Mat_Tails_Crests": tcBake, "Mat_Eyes": eyeBake };
         for (const mat of main.model.materials) {
             const texData = materialMap[mat.name];
             if (texData) {
                 const tex = await main.createTexture(texData);
-                if (mat.pbrMetallicRoughness.baseColorTexture) {
-                    mat.pbrMetallicRoughness.baseColorTexture.setTexture(tex);
-                }
+                if (mat.pbrMetallicRoughness.baseColorTexture) mat.pbrMetallicRoughness.baseColorTexture.setTexture(tex);
             }
         }
-        
         Object.keys(activeParts).forEach(type => togglePart(type, activeParts[type]));
     }
 
