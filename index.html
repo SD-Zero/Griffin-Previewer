@@ -3,63 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Griffin Previewer - Full Options</title>
+    <title>Griffin Character Creator</title>
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; background: #1a1a1a; color: white; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        header { padding: 10px; background: #222; text-align: center; border-bottom: 2px solid #ff9d00; }
+        body { margin: 0; background: #1a1a1a; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* 3D VIEWPORT AREA */
         .viewer-container { flex: 1; position: relative; background: radial-gradient(#333, #000); }
+        model-viewer { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
         
-        /* Layering the 3D viewers */
-        model-viewer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
-        #griffin { pointer-events: auto; } /* Only the body allows touch rotation */
+        /* This ensures only the MAIN griffin handles touches, while parts just follow along */
+        #griffin { z-index: 1; pointer-events: auto; }
+        #crest-v, #wings-v, #tail-v { z-index: 2; pointer-events: none; }
 
-        .ui-panel { padding: 15px; background: #222; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; max-height: 45vh; border-top: 2px solid #444; }
-        .group { border: 1px solid #444; padding: 10px; border-radius: 10px; background: #2d2d2d; }
-        h4 { margin: 0 0 10px 0; font-size: 11px; color: #ff9d00; text-transform: uppercase; letter-spacing: 1px; }
-        .button-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; }
-        
-        button { background: #444; color: white; border: 1px solid #666; padding: 8px; cursor: pointer; border-radius: 4px; font-size: 12px; }
-        button:active, button.active { background: #ff9d00; color: black; border-color: #fff; }
+        /* VERTICAL SIDEBAR */
+        .sidebar { 
+            width: 280px; 
+            background: #222; 
+            border-left: 2px solid #ff9d00; 
+            display: flex; 
+            flex-direction: column; 
+            overflow-y: auto;
+            padding: 15px;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.5);
+        }
+
+        h2 { font-size: 18px; color: #ff9d00; margin-top: 0; text-align: center; border-bottom: 1px solid #444; padding-bottom: 10px; }
+
+        /* DROPDOWN STYLING */
+        details { margin-bottom: 10px; background: #2d2d2d; border-radius: 5px; overflow: hidden; }
+        summary { 
+            padding: 12px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            background: #333; 
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        summary::-webkit-details-marker { display: none; }
+        summary::after { content: '▼'; font-size: 10px; color: #ff9d00; }
+        details[open] summary::after { content: '▲'; }
+
+        /* BUTTON STACK */
+        .button-stack { display: flex; flex-direction: column; padding: 10px; gap: 5px; }
+        button { 
+            background: #444; 
+            color: white; 
+            border: 1px solid #555; 
+            padding: 10px; 
+            text-align: left; 
+            cursor: pointer; 
+            border-radius: 4px; 
+            font-size: 13px;
+            transition: 0.2s;
+        }
+        button:hover { background: #555; border-color: #ff9d00; }
+        button:active { background: #ff9d00; color: black; }
     </style>
 </head>
 <body>
 
-<header><h2 style="margin:0; font-size: 18px;">Griffin Previewer</h2></header>
-
 <div class="viewer-container">
-    <model-viewer id="griffin" src="Griffin_LQ_Body_Mesh.glb" camera-controls auto-rotate bounds="tight" exposure="1.2"></model-viewer>
-    <model-viewer id="crest-v" src="" exposure="1.2" center-model="false"></model-viewer>
-    <model-viewer id="wings-v" src="" exposure="1.2" center-model="false"></model-viewer>
-    <model-viewer id="tail-v" src="" exposure="1.2" center-model="false"></model-viewer>
+    <model-viewer id="griffin" 
+        src="Griffin_LQ_Body_Mesh.glb" 
+        camera-controls 
+        interaction-prompt="none"
+        shadow-intensity="1" 
+        exposure="1.2">
+    </model-viewer>
+
+    <model-viewer id="crest-v" src="" interaction-prompt="none" center-model="false"></model-viewer>
+    <model-viewer id="wings-v" src="" interaction-prompt="none" center-model="false"></model-viewer>
+    <model-viewer id="tail-v" src="" interaction-prompt="none" center-model="false"></model-viewer>
 </div>
 
-<div class="ui-panel">
-    <div class="group">
-        <h4>Body Patterns</h4>
-        <div class="button-grid">
+<div class="sidebar">
+    <h2>GRIFFIN EDITOR</h2>
+
+    <details open>
+        <summary>Patterns</summary>
+        <div class="button-stack">
             <button onclick="changePattern('Griffin_Pattern00_HQ.png')">Drifter</button>
             <button onclick="changePattern('Griffin_Pattern01_HQ.png')">Duochrome</button>
             <button onclick="changePattern('Griffin_Pattern02_HQ.png')">Shining</button>
             <button onclick="changePattern('Griffin_Pattern03_HQ.png')">Stealthy</button>
             <button onclick="changePattern('Griffin_Pattern04_HQ.png')">Harfang</button>
         </div>
-    </div>
+    </details>
 
-    <div class="group">
-        <h4>Crest Type</h4>
-        <div class="button-grid">
+    <details>
+        <summary>Crests</summary>
+        <div class="button-stack">
             <button onclick="changePart('crest', 'Bestial_Crest.glb')">Bestial</button>
             <button onclick="changePart('crest', 'Pinnacle_Crest.glb')">Pinnacle</button>
             <button onclick="changePart('crest', 'Windswept_Crest.glb')">Windswept</button>
             <button onclick="changePart('crest', 'Harpy_Crest.glb')">Harpy</button>
             <button onclick="changePart('crest', '')">None</button>
         </div>
-    </div>
+    </details>
 
-    <div class="group">
-        <h4>Wing Type</h4>
-        <div class="button-grid">
+    <details>
+        <summary>Wings</summary>
+        <div class="button-stack">
             <button onclick="changePart('wings', 'Heroic_Wings.glb')">Heroic</button>
             <button onclick="changePart('wings', 'Osprey_Wings.glb')">Osprey</button>
             <button onclick="changePart('wings', 'Manticore_Wings.glb')">Manticore</button>
@@ -67,35 +114,38 @@
             <button onclick="changePart('wings', 'Seraph_Wings.glb')">Seraph</button>
             <button onclick="changePart('wings', '')">None</button>
         </div>
-    </div>
+    </details>
 
-    <div class="group">
-        <h4>Tail Type</h4>
-        <div class="button-grid">
+    <details>
+        <summary>Tails</summary>
+        <div class="button-stack">
             <button onclick="changePart('tail', 'Fanned_Tail.glb')">Fanned</button>
             <button onclick="changePart('tail', 'Quetzal_Tail.glb')">Quetzal</button>
             <button onclick="changePart('tail', 'Svelte_Tail.glb')">Svelte</button>
             <button onclick="changePart('tail', 'Tufted_Tail.glb')">Tufted</button>
             <button onclick="changePart('tail', 'Scorpio_Tail.glb')">Scorpio</button>
+            <button onclick="changePart('tail', '')">None</button>
         </div>
-    </div>
+    </details>
 </div>
 
 <script>
     const main = document.querySelector('#griffin');
-    const crestV = document.querySelector('#crest-v');
-    const wingsV = document.querySelector('#wings-v');
-    const tailV = document.querySelector('#tail-v');
+    const parts = {
+        crest: document.querySelector('#crest-v'),
+        wings: document.querySelector('#wings-v'),
+        tail: document.querySelector('#tail-v')
+    };
     
     let currentPattern = 'Griffin_Pattern00_HQ.png';
 
-    // Sync all cameras to the main body
+    // SYNC CAMERAS (The invisible follow logic)
     main.addEventListener('camera-change', () => {
         const orbit = main.cameraOrbit;
         const fov = main.fieldOfView;
         const target = main.getCameraTarget();
         
-        [crestV, wingsV, tailV].forEach(v => {
+        Object.values(parts).forEach(v => {
             v.cameraOrbit = orbit;
             v.fieldOfView = fov;
             v.cameraTarget = `${target.x}m ${target.y}m ${target.z}m`;
@@ -108,14 +158,13 @@
     }
 
     function changePart(type, file) {
-        const target = document.querySelector(`#${type}-v`);
+        const target = parts[type];
         target.src = file;
-        // Re-apply pattern to the new part once it loads
         target.addEventListener('load', () => applyPatternToAll(), { once: true });
     }
 
     async function applyPatternToAll() {
-        const viewers = [main, crestV, wingsV, tailV];
+        const viewers = [main, ...Object.values(parts)];
         for (const v of viewers) {
             if (v.src && v.model) {
                 const texture = await v.createTexture(currentPattern);
