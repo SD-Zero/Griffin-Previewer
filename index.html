@@ -9,12 +9,10 @@
         body { margin: 0; background: #111; color: white; font-family: sans-serif; display: flex; height: 100vh; overflow: hidden; }
         .viewer-container { flex: 1; position: relative; background: radial-gradient(#333, #000); }
         
-        /* Force every viewer to be a perfect overlay */
         model-viewer { 
             position: absolute; 
             top: 0; left: 0; width: 100%; height: 100%; 
             --poster-color: transparent;
-            background-color: transparent;
         }
 
         #griffin { z-index: 1; }
@@ -39,23 +37,16 @@
 
 <div class="viewer-container">
     <model-viewer id="griffin" src="griffin.glb" camera-controls auto-rotate interaction-prompt="none" shadow-intensity="1" exposure="1.2" environment-image="neutral"></model-viewer>
-    <model-viewer id="crest-v" src="" interaction-prompt="none" exposure="1.2" environment-image="neutral"></model-viewer>
-    <model-viewer id="wings-v" src="" interaction-prompt="none" exposure="1.2" environment-image="neutral"></model-viewer>
-    <model-viewer id="tail-v" src="" interaction-prompt="none" exposure="1.2" environment-image="neutral"></model-viewer>
-    <model-viewer id="eyes-v" src="Griffin_LQ_Eyes_Mesh.glb" interaction-prompt="none" exposure="1.2" environment-image="neutral"></model-viewer>
+    
+    <model-viewer id="crest-v" src="" interaction-prompt="none" bounds="manual" exposure="1.2"></model-viewer>
+    <model-viewer id="wings-v" src="" interaction-prompt="none" bounds="manual" exposure="1.2"></model-viewer>
+    <model-viewer id="tail-v" src="" interaction-prompt="none" bounds="manual" exposure="1.2"></model-viewer>
+    <model-viewer id="eyes-v" src="Griffin_LQ_Eyes_Mesh.glb" interaction-prompt="none" bounds="manual" exposure="1.2"></model-viewer>
 </div>
 
 <div class="sidebar">
     <h2>GRIFFIN SYSTEM</h2>
     
-    <details open><summary>PATTERNS</summary><div class="button-stack">
-        <button class="part-btn" onclick="changePattern('Griffin_Pattern00_HQ.png')">DRIFTER</button>
-        <button class="part-btn" onclick="changePattern('Griffin_Pattern02_HQ.png')">DUOCHROME</button>
-        <button class="part-btn" onclick="changePattern('Griffin_Pattern01_HQ.png')">SHINING</button>
-        <button class="part-btn" onclick="changePattern('Griffin_Pattern03_HQ.png')">STEALTHY</button>
-        <button class="part-btn" onclick="changePattern('Griffin_Pattern04_HQ.png')">HARFANG</button>
-    </div></details>
-
     <details open><summary>EYES</summary><div class="button-stack">
         <button class="part-btn" onclick="changeEyeModel('Griffin_LQ_Eyes_Mesh.glb')">Standard Eyes</button>
         <button class="part-btn" onclick="changeEyeModel('Griffin_LQ_Eyelash_Mesh.glb')">Eyelash Eyes</button>
@@ -74,6 +65,14 @@
             <option value="Eye10_Texture.png">Suspicious</option>
             <option value="Eye11_Texture.png">Striking</option>
         </select>
+    </div></details>
+
+    <details open><summary>PATTERNS</summary><div class="button-stack">
+        <button class="part-btn" onclick="changePattern('Griffin_Pattern00_HQ.png')">DRIFTER</button>
+        <button class="part-btn" onclick="changePattern('Griffin_Pattern02_HQ.png')">DUOCHROME</button>
+        <button class="part-btn" onclick="changePattern('Griffin_Pattern01_HQ.png')">SHINING</button>
+        <button class="part-btn" onclick="changePattern('Griffin_Pattern03_HQ.png')">STEALTHY</button>
+        <button class="part-btn" onclick="changePattern('Griffin_Pattern04_HQ.png')">HARFANG</button>
     </div></details>
 
     <details><summary>CRESTS</summary><div class="button-stack">
@@ -164,15 +163,15 @@
 
         for (let i = 0; i < data.length; i += 4) {
             const r = data[i], g = data[i+1], b = data[i+2];
-            const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
             
             if (isEye) {
-                // TINT ONLY: Pure multiplication by luminance. 
-                // This forces the black model parts to stay black.
-                data[i] = colors.eye.r * lum;
-                data[i+1] = colors.eye.g * lum;
-                data[i+2] = colors.eye.b * lum;
+                // Strict tinting based on the original texture brightness
+                // If texture is black (0), result is black. If texture is bright, it takes the eye color.
+                data[i] = colors.eye.r * (r / 255);
+                data[i+1] = colors.eye.g * (g / 255);
+                data[i+2] = colors.eye.b * (b / 255);
             } else {
+                const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
                 if (lum < 0.05) continue; 
                 let target = null;
                 let intensity = 1.0;
@@ -233,17 +232,15 @@
             for (const mat of eyeViewer.model.materials) {
                 const tex = await eyeViewer.createTexture(eyeBake);
                 if (mat.pbrMetallicRoughness.baseColorTexture) mat.pbrMetallicRoughness.baseColorTexture.setTexture(tex);
+                // Keep the actual model mesh material values neutral so only texture shows
+                mat.pbrMetallicRoughness.setBaseColorFactor([1, 1, 1, 1]);
             }
         }
     }
 
     function changeEyeModel(file) {
         eyeViewer.setAttribute('src', file);
-        eyeViewer.addEventListener('model-visibility', () => {
-            // Force reset on load
-            sync();
-            updateAll();
-        }, { once: true });
+        eyeViewer.addEventListener('model-visibility', () => updateAll(), { once: true });
     }
 
     function changeEyeShape(file) {
@@ -256,7 +253,6 @@
         return { r: Math.round(f(0) * 255), g: Math.round(f(8) * 255), b: Math.round(f(4) * 255) };
     }
 
-    // STRICT SYNC: No individual framing allowed
     function sync() {
         const orbit = main.getCameraOrbit();
         const fov = main.getFieldOfView();
@@ -265,6 +261,7 @@
         const viewers = [...Object.values(parts), eyeViewer];
         viewers.forEach(v => {
             if(v.getAttribute('src')) {
+                // By syncing the orbit AND the target, they must align
                 v.cameraOrbit = `${orbit.theta}rad ${orbit.phi}rad ${orbit.radius}m`;
                 v.fieldOfView = `${fov}deg`;
                 v.cameraTarget = `${target.x}m ${target.y}m ${target.z}m`;
