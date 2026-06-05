@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Griffin Builder</title>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.3.1/model-viewer.min.js"></script>
+    <style>
+        body { margin: 0; background: #1a1a1a; color: white; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; height: 100vh; }
+        model-viewer { flex: 1; width: 100%; background: radial-gradient(#444, #111); }
+        .menu { padding: 20px; background: #222; border-top: 2px solid #444; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        section { border: 1px solid #333; padding: 10px; border-radius: 8px; }
+        button { background: #555; color: white; border: none; padding: 8px; margin: 2px; cursor: pointer; border-radius: 4px; }
+        button:hover { background: #777; }
+        .active { background: #2ecc71; }
+    </style>
+</head>
+<body>
+
+<model-viewer id="griffin" camera-controls auto-rotate shadow-intensity="1" exposure="1">
+    <div id="base-container"></div>
+    
+    <model-viewer id="crest-layer" src="crest_01.glb" style="position: absolute; top: 0; pointer-events: none;"></model-viewer>
+</model-viewer>
+
+<div class="menu">
+    <section>
+        <p>Patterns</p>
+        <button onclick="setPattern('default.png')">Default</button>
+        <button onclick="setPattern('pattern_01.png')">Pattern A</button>
+    </section>
+
+    <section>
+        <p>Crest Type</p>
+        <button onclick="toggleCrest(true)">Crest 01</button>
+        <button onclick="toggleCrest(false)">None</button>
+    </section>
+</div>
+
+<script>
+    const mainModel = document.querySelector('#griffin');
+    const crestModel = document.querySelector('#crest-layer');
+
+    // Add the base model to the viewer
+    mainModel.src = "griffin_base.glb";
+
+    // Change Pattern (Texture)
+    async function setPattern(url) {
+        const material = mainModel.model.materials[0];
+        const texture = await mainModel.createTexture(url);
+        material.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
+    }
+
+    // Toggle Crest visibility
+    function toggleCrest(show) {
+        crestModel.style.display = show ? "block" : "none";
+    }
+</script>
+
+</body>
+</html>
