@@ -3,27 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AJ Griffin OBJ Previewer</title>
+    <title>Griffin Previewer</title>
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <style>
         body { margin: 0; background: #1a1a1a; color: white; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         header { padding: 10px; background: #222; text-align: center; border-bottom: 2px solid #ff9d00; }
         .viewer-container { flex: 1; position: relative; background: radial-gradient(#333, #000); }
-        model-viewer { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+        
+        /* This stacks the two viewers perfectly */
+        model-viewer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        #crest-layer { pointer-events: none; } 
+        
         .ui-panel { padding: 15px; background: #222; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; z-index: 100; }
         .group { border: 1px solid #444; padding: 10px; border-radius: 10px; background: #2d2d2d; text-align: center; }
-        h4 { margin: 0 0 10px 0; font-size: 12px; color: #ff9d00; text-transform: uppercase; }
-        button { background: #444; color: white; border: 1px solid #666; padding: 10px; cursor: pointer; border-radius: 5px; }
-        button:active { background: #ff9d00; color: black; }
+        button { background: #444; color: white; border: 1px solid #666; padding: 10px; border-radius: 5px; }
     </style>
 </head>
 <body>
 
-<header><h2 style="margin:0;">Griffin OBJ Previewer</h2></header>
+<header><h2 style="margin:0;">Griffin Previewer</h2></header>
 
 <div class="viewer-container">
     <model-viewer id="griffin" 
-        src="Griffin_LQ_Body_Mesh.obj" 
+        src="Griffin_LQ_Body_Mesh.glb" 
         camera-controls 
         auto-rotate 
         bounds="tight" 
@@ -31,7 +33,7 @@
     </model-viewer>
 
     <model-viewer id="crest-layer" 
-        src="Crest_1.obj" 
+        src="Crest_1.glb" 
         exposure="1.2"
         interaction-prompt="none">
     </model-viewer>
@@ -45,9 +47,9 @@
         <button onclick="applyAll('Griffin_Pattern02_HQ.png')">02</button>
     </div>
     <div class="group">
-        <h4>Toggle</h4>
-        <button onclick="toggleCrest(true)">Crest On</button>
-        <button onclick="toggleCrest(false)">Crest Off</button>
+        <h4>Crest</h4>
+        <button onclick="toggleCrest(true)">Show</button>
+        <button onclick="toggleCrest(false)">Hide</button>
     </div>
 </div>
 
@@ -55,27 +57,30 @@
     const main = document.querySelector('#griffin');
     const crest = document.querySelector('#crest-layer');
 
-    // Keep them synced
-    main.addEventListener('camera-change', () => {
+    // This is the "Magic Sync"
+    // It forces the crest viewer to use the EXACT same camera math as the griffin
+    const syncCameras = () => {
         crest.cameraOrbit = main.cameraOrbit;
         crest.fieldOfView = main.fieldOfView;
-        crest.cameraTarget = main.cameraTarget;
-    });
+        
+        // This line is the key: it forces the 'eye' of the crest camera 
+        // to stay centered on the griffin's body
+        crest.cameraTarget = main.getCameraTarget();
+    };
+
+    main.addEventListener('camera-change', syncCameras);
 
     async function applyAll(img) {
-        if (main.model) applyToModel(main, img);
-        if (crest.model) applyToModel(crest, img);
-    }
-
-    async function applyToModel(target, img) {
-        const texture = await target.createTexture(img);
-        if (target.model && target.model.materials) {
-            target.model.materials.forEach(mat => {
-                if (mat.pbrMetallicRoughness.baseColorTexture) {
-                    mat.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
-                }
-            });
-        }
+        const texture = await main.createTexture(img);
+        [main, crest].forEach(viewer => {
+            if (viewer.model) {
+                viewer.model.materials.forEach(mat => {
+                    if (mat.pbrMetallicRoughness.baseColorTexture) {
+                        mat.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
+                    }
+                });
+            }
+        });
     }
 
     function toggleCrest(show) {
