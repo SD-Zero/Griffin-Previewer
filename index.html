@@ -32,7 +32,7 @@
     <model-viewer id="crest-v" src="" interaction-prompt="none"></model-viewer>
     <model-viewer id="wings-v" src="" interaction-prompt="none"></model-viewer>
     <model-viewer id="tail-v" src="" interaction-prompt="none"></model-viewer>
-    <model-viewer id="eyes-v" src="Griffin_LQ_Eyes_Mesh.glb" interaction-prompt="none" bounds="manual" camera-target="0m 0m 0m"></model-viewer>
+    <model-viewer id="eyes-v" src="Griffin_LQ_Eyes_Mesh.glb" interaction-prompt="none"></model-viewer>
 </div>
 <div class="sidebar">
     <h2>GRIFFIN SYSTEM</h2>
@@ -112,11 +112,8 @@
         for (let i = 0; i < data.length; i += 4) {
             const r = data[i], g = data[i+1], b = data[i+2];
             if (isEye) {
-                // Strict: only yellow pixels (r and g high) take color. Red stays black.
-                if (r > 120 && g > 100) {
-                    const factor = (r + g) / 510;
-                    data[i] = colors.eye.r * factor; data[i+1] = colors.eye.g * factor; data[i+2] = colors.eye.b * factor;
-                } else { data[i] = 0; data[i+1] = 0; data[i+2] = 0; }
+                if (r > 110 && g > 90) { const f = (r + g) / 510; data[i] = colors.eye.r * f; data[i+1] = colors.eye.g * f; data[i+2] = colors.eye.b * f; }
+                else { data[i] = 0; data[i+1] = 0; data[i+2] = 0; }
                 data[i+3] = 255;
             } else {
                 const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255; if (lum < 0.05) continue; 
@@ -139,15 +136,19 @@
     function sync() {
         if (!main.model) { requestAnimationFrame(sync); return; }
         const orbit = main.getCameraOrbit(), fov = main.getFieldOfView(), target = main.getCameraTarget();
-        [...Object.values(parts), eyeViewer].forEach(v => {
-            if(v.getAttribute('src')) {
-                // Ensure synchronization of viewpoint, rotation, and distance
-                v.cameraOrbit = `${orbit.theta}rad ${orbit.phi}rad ${orbit.radius}m`;
-                v.fieldOfView = `${fov}deg`;
-                v.cameraTarget = `${target.x}m ${target.y}m ${target.z}m`;
-                v.jumpCameraToGoal();
+        const viewers = [...Object.values(parts), eyeViewer];
+        for (const v of viewers) {
+            if (v.getAttribute('src')) {
+                // Low-level camera syncing to minimize latency and clipping
+                const cam = v.getCameraOrbit();
+                if (cam.theta !== orbit.theta || cam.phi !== orbit.phi || cam.radius !== orbit.radius) {
+                    v.cameraOrbit = `${orbit.theta}rad ${orbit.phi}rad ${orbit.radius}m`;
+                    v.fieldOfView = `${fov}deg`;
+                    v.cameraTarget = `${target.x}m ${target.y}m ${target.z}m`;
+                    v.jumpCameraToGoal();
+                }
             }
-        });
+        }
         requestAnimationFrame(sync);
     }
     sync();
