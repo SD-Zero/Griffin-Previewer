@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Griffin Creator Pro</title>
+    <title>Griffin Creator Ultimate</title>
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <style>
         body { margin: 0; background: #111; color: white; font-family: sans-serif; display: flex; height: 100vh; overflow: hidden; }
@@ -33,8 +33,8 @@
     <h2>GRIFFIN SYSTEM</h2>
     
     <details open><summary>EYES</summary><div class="button-stack">
-        <button class="part-btn" onclick="toggleEyes('Mesh_Eyes_Normal')">Standard Eyes</button>
-        <button class="part-btn" onclick="toggleEyes('Mesh_Eyes_Lashes')">Eyelash Eyes</button>
+        <button class="part-btn" onclick="togglePart('eye', 'Mesh_Eyes_Normal')">Standard Eyes</button>
+        <button class="part-btn" onclick="togglePart('eye', 'Mesh_Eyes_Lashes')">Eyelash Eyes</button>
         <hr style="border:0; border-top:1px solid #444; margin:5px 0;">
         <select class="part-select" onchange="changeEyeShape(this.value)">
             <option value="Eye00_Texture.png">Ordinary</option>
@@ -50,6 +50,31 @@
             <option value="Eye10_Texture.png">Suspicious</option>
             <option value="Eye11_Texture.png">Striking</option>
         </select>
+    </div></details>
+
+    <details open><summary>CRESTS</summary><div class="button-stack">
+        <button class="part-btn" onclick="togglePart('crest', 'bestial')">BESTIAL</button>
+        <button class="part-btn" onclick="togglePart('crest', 'pinnacle')">PINNACLE</button>
+        <button class="part-btn" onclick="togglePart('crest', 'windswept')">WINDSWEPT</button>
+        <button class="part-btn" onclick="togglePart('crest', 'harpy')">HARPY</button>
+        <button class="part-btn" onclick="togglePart('crest', 'none')">NONE</button>
+    </div></details>
+
+    <details open><summary>WINGS</summary><div class="button-stack">
+        <button class="part-btn" onclick="togglePart('wing', 'heroic')">HEROIC</button>
+        <button class="part-btn" onclick="togglePart('wing', 'osprey')">OSPREY</button>
+        <button class="part-btn" onclick="togglePart('wing', 'manticore')">MANTICORE</button>
+        <button class="part-btn" onclick="togglePart('wing', 'scarab')">SCARAB</button>
+        <button class="part-btn" onclick="togglePart('wing', 'seraph')">SERAPH</button>
+        <button class="part-btn" onclick="togglePart('wing', 'none')">NONE</button>
+    </div></details>
+
+    <details open><summary>TAILS</summary><div class="button-stack">
+        <button class="part-btn" onclick="togglePart('tail', 'fanned')">FANNED</button>
+        <button class="part-btn" onclick="togglePart('tail', 'svelte')">SVELTE</button>
+        <button class="part-btn" onclick="togglePart('tail', 'tufted')">TUFTED</button>
+        <button class="part-btn" onclick="togglePart('tail', 'scorpio')">SCORPIO</button>
+        <button class="part-btn" onclick="togglePart('tail', 'none')">NONE</button>
     </div></details>
 
     <details open><summary>PATTERNS</summary><div class="button-stack">
@@ -72,6 +97,9 @@
     let colors = { primary: {r:255, g:255, b:255}, secondary: {r:255, g:255, b:255}, tertiary: {r:255, g:255, b:255}, eye: {r:255, g:255, b:255} };
     let currentPattern = 'Griffin_Pattern00_HQ.png';
     let currentEyeShape = 'Eye00_Texture.png';
+    
+    // Active state tracking
+    let activeParts = { eye: 'Mesh_Eyes_Normal', wing: 'heroic', crest: 'bestial', tail: 'fanned' };
 
     ["primary", "secondary", "tertiary", "eye"].forEach(type => {
         const container = document.getElementById(`${type}-container`);
@@ -111,21 +139,24 @@
         ctx.putImageData(imageData, 0, 0); return canvas.toDataURL();
     }
 
-    // New visibility logic using the scene graph
-    function toggleEyes(meshToShow) {
+    function togglePart(type, name) {
+        activeParts[type] = name;
         if (!main.model) return;
         
-        // This is a direct check for the Three.js object inside model-viewer
-        const scene = main.getScene(); // Access internal Three.js scene
-        if(!scene) return;
+        const scene = main[Object.getOwnPropertySymbols(main).find(s => s.description === 'scene')];
+        if (!scene) return;
 
-        scene.traverse((object) => {
-            if (object.isMesh || object.isGroup) {
-                if (object.name === 'Mesh_Eyes_Normal') {
-                    object.visible = (meshToShow === 'Mesh_Eyes_Normal');
-                }
-                if (object.name === 'Mesh_Eyes_Lashes') {
-                    object.visible = (meshToShow === 'Mesh_Eyes_Lashes');
+        scene.traverse((obj) => {
+            if (obj.isMesh || obj.isGroup) {
+                const n = obj.name.toLowerCase();
+                // Check if object name matches the category and name
+                if (type === 'eye') {
+                    if (n.includes('mesh_eyes_normal')) obj.visible = (name === 'Mesh_Eyes_Normal');
+                    if (n.includes('mesh_eyes_lashes')) obj.visible = (name === 'Mesh_Eyes_Lashes');
+                } else {
+                    if (n.includes(type)) {
+                        obj.visible = (n.includes(name.toLowerCase()));
+                    }
                 }
             }
         });
@@ -135,24 +166,24 @@
         if (!main.model) return;
         
         const bodyBake = await processTexture(currentPattern);
+        const wingBake = await processTexture('Griffin_Wings.png');
+        const tcBake = await processTexture('Griffin_Tails_Crests.png');
         const eyeBake = await processTexture(currentEyeShape, true);
         
         for (const mat of main.model.materials) {
-            if (mat.name === "Mat_GriffinBody") {
-                const tex = await main.createTexture(bodyBake);
-                if (mat.pbrMetallicRoughness.baseColorTexture) mat.pbrMetallicRoughness.baseColorTexture.setTexture(tex);
-            }
-            if (mat.name === "Mat_Eyes") {
-                const tex = await main.createTexture(eyeBake);
+            const texData = (mat.name === "Mat_GriffinBody") ? bodyBake :
+                            (mat.name === "Mat_Wings") ? wingBake :
+                            (mat.name === "Mat_Tails_Crests") ? tcBake :
+                            (mat.name === "Mat_Eyes") ? eyeBake : null;
+            
+            if (texData) {
+                const tex = await main.createTexture(texData);
                 if (mat.pbrMetallicRoughness.baseColorTexture) mat.pbrMetallicRoughness.baseColorTexture.setTexture(tex);
             }
         }
         
-        // Force Normal Eyes on first load
-        if (!window.eyesInitialized) {
-            toggleEyes('Mesh_Eyes_Normal');
-            window.eyesInitialized = true;
-        }
+        // Re-apply visibility for all types
+        Object.keys(activeParts).forEach(type => togglePart(type, activeParts[type]));
     }
 
     function changeEyeShape(f) { currentEyeShape = f; updateAll(); }
