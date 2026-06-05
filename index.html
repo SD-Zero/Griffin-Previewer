@@ -15,7 +15,6 @@
         }
 
         #griffin { z-index: 1; }
-        /* Traits are forced to the background until they align */
         #crest-v, #wings-v, #tail-v { z-index: 2; pointer-events: none; visibility: hidden; }
 
         .sidebar { 
@@ -26,12 +25,10 @@
         details { margin-bottom: 5px; background: #2d2d2d; border-radius: 4px; }
         summary { padding: 12px; font-weight: bold; cursor: pointer; background: #333; display: flex; justify-content: space-between; list-style: none; }
         summary::after { content: '▼'; font-size: 10px; color: #ff9d00; }
-        details[open] summary::after { content: '▲'; }
-
+        
         .button-stack { display: flex; flex-direction: column; padding: 10px; gap: 5px; }
         button.part-btn { background: #444; color: white; border: 1px solid #555; padding: 10px; text-align: left; border-radius: 4px; cursor: pointer; }
-        button:active { background: #ff9d00; color: black; }
-
+        
         .palette-group { background: #1a1a1a; padding: 5px; border-top: 1px solid #444; }
         .color-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 10px; }
         .swatch { width: 100%; aspect-ratio: 1; border-radius: 3px; cursor: pointer; border: 1px solid #444; }
@@ -105,11 +102,13 @@
 
     const main = document.querySelector('#griffin');
     const parts = { crest: document.querySelector('#crest-v'), wings: document.querySelector('#wings-v'), tail: document.querySelector('#tail-v') };
+    
+    let colors = { primary: {r:255, g:255, b:255}, secondary: {r:200, g:200, b:200}, tertiary: {r:150, g:150, b:150} };
     let currentPattern = 'Griffin_Pattern00_HQ.png';
-    let primaryColor = '#ffffff';
 
-    ["primary", "secondary", "tertiary"].forEach(section => {
-        const container = document.getElementById(`${section}-container`);
+    // Generate Color UI
+    ["primary", "secondary", "tertiary"].forEach(type => {
+        const container = document.getElementById(`${type}-container`);
         paletteData.forEach(p => {
             const det = document.createElement('details');
             det.className = "palette-group";
@@ -119,64 +118,78 @@
             for(let i=0; i<p.count; i++) {
                 const s = document.createElement('div');
                 s.className = "swatch";
-                const hex = `hsl(${(i * 360) / p.count}, 50%, 50%)`; 
-                s.style.background = hex;
-                s.onclick = () => { primaryColor = hex; updateMaterials(); };
+                const hsl = `hsl(${(i * 360) / p.count}, 50%, 50%)`;
+                s.style.background = hsl;
+                s.onclick = () => { colors[type] = hslToRgb((i * 360) / p.count, 0.5, 0.5); updateAllMaterials(); };
                 grid.appendChild(s);
             }
         });
     });
 
-    function sync() {
-        const orbit = main.getCameraOrbit();
-        const fov = main.getFieldOfView();
-        const target = main.getCameraTarget();
-        
-        Object.values(parts).forEach(v => {
-            if(v.getAttribute('src')) {
-                v.cameraOrbit = `${orbit.theta}rad ${orbit.phi}rad ${orbit.radius}m`;
-                v.fieldOfView = `${fov}deg`;
-                v.cameraTarget = `${target.x}m ${target.y}m ${target.z}m`;
-                // Force alignment snap
-                v.jumpCameraToGoal();
-            }
-        });
-        requestAnimationFrame(sync);
-    }
-    sync();
+    async function processTexture(imgSrc, isMainBody) {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.src = imgSrc;
+        await img.decode();
 
-    async function updateMaterials() {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+
+        for (let i = 0; i < data.length; i += 4) {
+            const r = data[i], g = data[i+1], b = data[i+2];
+            let targetColor = colors.primary;
+
+            // Red detection (Primary)
+            if (r > 150 && g < 100 && b < 100) targetColor = colors.primary;
+            // Yellow detection (Secondary)
+            else if (r > 150 && g > 150 && b < 100) targetColor = colors.secondary;
+            // Pink/Blue/Green detection (Tertiary)
+            else if ((r > 150 && b > 150) || b > 150 || (g > 150 && r < 100)) targetColor = colors.tertiary;
+            else continue; // Skip greyscale/shading pixels to keep built-in shadows
+
+            // Multiply tint to preserve shading
+            data[i] = (r / 255) * targetColor.r;
+            data[i+1] = (g / 255) * targetColor.g;
+            data[i+2] = (b / 255) * targetColor.b;
+        }
+
+        ctx.putImageData(imageData, 0, 0);
+        return canvas.toDataURL();
+    }
+
+    async function updateAllMaterials() {
+        // Update Body
+        const bodyTex = await processTexture(currentPattern, true);
         if (main.model) {
             for (const mat of main.model.materials) {
-                const n = mat.name.toLowerCase();
-                if (n.includes("wing") || n.includes("tail") || n.includes("crest")) {
+                if (!mat.name.toLowerCase().includes("wing") && !mat.name.toLowerCase().includes("tail") && !mat.name.toLowerCase().includes("crest")) {
+                    const tex = await main.createTexture(bodyTex);
+                    mat.pbrMetallicRoughness.baseColorTexture.setTexture(tex);
+                } else {
                     mat.setAlphaMode("BLEND");
                     mat.pbrMetallicRoughness.setBaseColorFactor([0,0,0,0]);
-                } else {
-                    const tex = await main.createTexture(currentPattern);
-                    if (mat.pbrMetallicRoughness.baseColorTexture) mat.pbrMetallicRoughness.baseColorTexture.setTexture(tex);
-                    const rgb = hexToRgb(primaryColor);
-                    mat.pbrMetallicRoughness.setBaseColorFactor([rgb.r/255, rgb.g/255, rgb.b/255, 1]);
                 }
             }
         }
 
+        // Update Parts
         for (const [key, v] of Object.entries(parts)) {
             if (v.getAttribute('src') && v.model) {
+                const rawTex = (key === 'wings') ? 'Griffin_Wings.png' : 'Griffin_Tails_Crests.png';
+                const bakedTex = await processTexture(rawTex, false);
                 for (const mat of v.model.materials) {
-                    const n = mat.name.toLowerCase();
-                    // Kill the "Ghost Griffin" inside the trait file
-                    if (n.includes("griffin") || n.includes("body") || n.includes("main")) {
+                    if (mat.name.toLowerCase().includes(key.substring(0,3))) {
+                        const tex = await v.createTexture(bakedTex);
+                        mat.pbrMetallicRoughness.baseColorTexture.setTexture(tex);
+                    } else {
                         mat.setAlphaMode("BLEND");
                         mat.pbrMetallicRoughness.setBaseColorFactor([0,0,0,0]);
-                    } 
-                    // Use key-specific materials only
-                    else if (n.includes(key.substring(0,3))) {
-                        const texFile = (key === 'wings') ? 'Griffin_Wings.png' : 'Griffin_Tails_Crests.png';
-                        const texture = await v.createTexture(texFile);
-                        if (mat.pbrMetallicRoughness.baseColorTexture) mat.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
-                        const rgb = hexToRgb(primaryColor);
-                        mat.pbrMetallicRoughness.setBaseColorFactor([rgb.r/255, rgb.g/255, rgb.b/255, 1]);
                     }
                 }
                 v.style.visibility = "visible";
@@ -184,28 +197,47 @@
         }
     }
 
-    function hexToRgb(hex) {
-        if(hex.startsWith('hsl')) {
-            let hsl = hex.substr(4).split(")")[0].split(/[ ,]+/);
-            let h = hsl[0], s = hsl[1].replace('%','') / 100, l = hsl[2].replace('%','') / 100;
-            let a = s * Math.min(l, 1 - l);
-            let f = (n, k = (n + h / 30) % 12) => l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
-            return { r: f(0) * 255, g: f(8) * 255, b: f(4) * 255 };
-        }
-        return {r: 255, g: 255, b: 255};
+    function hslToRgb(h, s, l) {
+        let r, g, b;
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        const f = (t) => {
+            if (t < 0) t += 1; if (t > 1) t -= 1;
+            if (t < 1/6) return p + (q - p) * 6 * t;
+            if (t < 1/2) return q;
+            if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+            return p;
+        };
+        return { r: Math.round(f(h/360 + 1/3) * 255), g: Math.round(f(h/360) * 255), b: Math.round(f(h/360 - 1/3) * 255) };
     }
+
+    function sync() {
+        const orbit = main.getCameraOrbit();
+        const fov = main.getFieldOfView();
+        const target = main.getCameraTarget();
+        Object.values(parts).forEach(v => {
+            if(v.getAttribute('src')) {
+                v.cameraOrbit = `${orbit.theta}rad ${orbit.phi}rad ${orbit.radius}m`;
+                v.fieldOfView = `${fov}deg`;
+                v.cameraTarget = `${target.x}m ${target.y}m ${target.z}m`;
+                v.jumpCameraToGoal();
+            }
+        });
+        requestAnimationFrame(sync);
+    }
+    sync();
 
     function changePart(type, file) {
         const v = parts[type];
         v.style.visibility = "hidden";
-        if (!file || file === "") { v.removeAttribute('src'); return; }
+        if (!file) { v.removeAttribute('src'); return; }
         v.setAttribute('src', file);
-        v.addEventListener('model-visibility', () => updateMaterials(), { once: true });
+        v.addEventListener('model-visibility', () => updateAllMaterials(), { once: true });
     }
 
     function changePattern(file) {
         currentPattern = file;
-        updateMaterials();
+        updateAllMaterials();
     }
 
     window.onload = () => {
@@ -214,7 +246,7 @@
         changePart('tail', 'fanned.glb');
     };
 
-    main.addEventListener('model-visibility', updateMaterials);
+    main.addEventListener('model-visibility', updateAllMaterials);
 </script>
 </body>
 </html>
