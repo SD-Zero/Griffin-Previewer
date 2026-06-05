@@ -7,12 +7,24 @@
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <style>
         body { margin: 0; background: #111; color: white; font-family: sans-serif; display: flex; height: 100vh; overflow: hidden; }
-        .viewer-container { flex: 1; position: relative; background: radial-gradient(#333, #000); }
-        model-viewer { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
-        #crest-v, #wings-v, #tail-v { z-index: 2; pointer-events: none; visibility: hidden; }
-        #eyes-v { z-index: 3; pointer-events: none; visibility: visible; }
+        .viewer-container { flex: 1; position: relative; background: radial-gradient(#333, #000); overflow: hidden; }
         
-        .sidebar { width: 320px; background: #222; border-left: 2px solid #ff9d00; display: flex; flex-direction: column; overflow-y: auto; padding: 10px; }
+        /* Ensure all layers are identical in size and position */
+        model-viewer { 
+            width: 100%; 
+            height: 100%; 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            --poster-color: transparent;
+            background-color: transparent;
+        }
+
+        #griffin { z-index: 1; }
+        #crest-v, #wings-v, #tail-v { z-index: 2; pointer-events: none; }
+        #eyes-v { z-index: 3; pointer-events: none; }
+
+        .sidebar { width: 320px; background: #222; border-left: 2px solid #ff9d00; display: flex; flex-direction: column; overflow-y: auto; padding: 10px; z-index: 10; }
         h2 { font-size: 14px; color: #ff9d00; text-align: center; letter-spacing: 2px; margin: 10px 0; border-bottom: 1px solid #444; padding-bottom: 10px; }
         details { margin-bottom: 5px; background: #2d2d2d; border-radius: 4px; }
         summary { padding: 12px; font-weight: bold; cursor: pointer; background: #333; display: flex; justify-content: space-between; font-size: 13px; }
@@ -29,7 +41,7 @@
 <body>
 
 <div class="viewer-container">
-    <model-viewer id="griffin" src="griffin.glb" camera-controls auto-rotate interaction-prompt="none" shadow-intensity="1" exposure="1.2" environment-image="neutral"></model-viewer>
+    <model-viewer id="griffin" src="griffin.glb" camera-controls auto-rotate interaction-prompt="none" shadow-intensity="1" exposure="1.2" environment-image="neutral" min-camera-orbit="auto auto auto" max-camera-orbit="auto auto auto"></model-viewer>
     <model-viewer id="crest-v" src="" interaction-prompt="none"></model-viewer>
     <model-viewer id="wings-v" src="" interaction-prompt="none"></model-viewer>
     <model-viewer id="tail-v" src="" interaction-prompt="none"></model-viewer>
@@ -117,12 +129,8 @@
     const main = document.querySelector('#griffin');
     const eyeViewer = document.querySelector('#eyes-v');
     const parts = { crest: document.querySelector('#crest-v'), wings: document.querySelector('#wings-v'), tail: document.querySelector('#tail-v') };
-    let colors = { 
-        primary: {r:255, g:255, b:255}, 
-        secondary: {r:255, g:255, b:255}, 
-        tertiary: {r:255, g:255, b:255},
-        eye: {r:255, g:255, b:255} 
-    };
+    
+    let colors = { primary: {r:255, g:255, b:255}, secondary: {r:255, g:255, b:255}, tertiary: {r:255, g:255, b:255}, eye: {r:255, g:255, b:255} };
     let currentPattern = 'Griffin_Pattern00_HQ.png';
     let currentEyeShape = 'Eye00_Texture.png';
 
@@ -162,12 +170,10 @@
             const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
             
             if (isEye) {
-                // EYE COLORING: Applies the Eye Color as a tint to the eye texture
                 data[i] = colors.eye.r * luminance;
                 data[i+1] = colors.eye.g * luminance;
                 data[i+2] = colors.eye.b * luminance;
             } else {
-                // BODY COLORING (Existing perfected logic)
                 if (luminance < 0.05) continue; 
                 let target = null;
                 let intensity = 1.0;
@@ -198,7 +204,6 @@
     }
 
     async function updateAll() {
-        // Body Update
         const bodyBake = await processTexture(currentPattern);
         if (main.model) {
             for (const mat of main.model.materials) {
@@ -213,7 +218,6 @@
             }
         }
         
-        // Parts Update
         for (const [key, v] of Object.entries(parts)) {
             if (v.getAttribute('src') && v.model) {
                 const raw = (key === 'wings') ? 'Griffin_Wings.png' : 'Griffin_Tails_Crests.png';
@@ -231,7 +235,6 @@
             }
         }
 
-        // Eye Update
         const eyeBake = await processTexture(currentEyeShape, true);
         if (eyeViewer.model) {
             for (const mat of eyeViewer.model.materials) {
@@ -257,15 +260,20 @@
     }
 
     function sync() {
+        // MAIN SYNC LOGIC
         const orbit = main.getCameraOrbit();
         const fov = main.getFieldOfView();
         const target = main.getCameraTarget();
+        
         const viewers = [...Object.values(parts), eyeViewer];
         viewers.forEach(v => {
             if(v.getAttribute('src')) {
+                // Ensure camera attributes match main exactly
                 v.cameraOrbit = `${orbit.theta}rad ${orbit.phi}rad ${orbit.radius}m`;
                 v.fieldOfView = `${fov}deg`;
                 v.cameraTarget = `${target.x}m ${target.y}m ${target.z}m`;
+                
+                // CRITICAL: Block auto-centering
                 v.jumpCameraToGoal();
             }
         });
