@@ -8,12 +8,22 @@
     <style>
         body { margin: 0; background: #1a1a1a; color: white; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         header { padding: 10px; background: #222; text-align: center; border-bottom: 2px solid #ff9d00; }
-        .viewer-container { flex: 1; background: radial-gradient(#333, #000); position: relative; }
-        model-viewer { width: 100%; height: 100%; }
+        .viewer-container { flex: 1; position: relative; background: radial-gradient(#333, #000); }
+        
+        /* The Base Griffin */
+        #griffin { width: 100%; height: 100%; position: absolute; z-index: 1; }
+        
+        /* The Crest - Forced to be small and ignore user touch */
+        #crest-layer { 
+            width: 100%; height: 100%; 
+            position: absolute; top: 0; left: 0; 
+            pointer-events: none; 
+            z-index: 2;
+        }
+        
         .ui-panel { padding: 15px; background: #222; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; z-index: 100; }
         .group { border: 1px solid #444; padding: 10px; border-radius: 10px; background: #2d2d2d; text-align: center; }
-        button { background: #444; color: white; border: 1px solid #666; padding: 10px; border-radius: 5px; min-width: 60px; }
-        button.active { background: #ff9d00; color: black; }
+        button { background: #444; color: white; border: 1px solid #666; padding: 10px; border-radius: 5px; }
     </style>
 </head>
 <body>
@@ -27,8 +37,15 @@
         auto-rotate 
         bounds="tight" 
         exposure="1.2">
-        
-        </model-viewer>
+    </model-viewer>
+
+    <model-viewer id="crest-layer" 
+        src="Crest_1.glb" 
+        exposure="1.2"
+        interaction-prompt="none"
+        loading="eager"
+        center-model="false">
+    </model-viewer>
 </div>
 
 <div class="ui-panel">
@@ -39,70 +56,50 @@
         <button onclick="applyAll('Griffin_Pattern02_HQ.png')">02</button>
     </div>
     <div class="group">
-        <h4>Head Piece</h4>
-        <button id="crestBtn" onclick="toggleCrest()">Toggle Crest</button>
+        <h4>Crest Scale</h4>
+        <button onclick="adjustCrest(0.1)">Small</button>
+        <button onclick="adjustCrest(1.0)">Normal</button>
+        <button onclick="adjustCrest(2.0)">Large</button>
     </div>
 </div>
 
 <script>
-    const viewer = document.querySelector('#griffin');
-    let crestInstance = null;
+    const main = document.querySelector('#griffin');
+    const crest = document.querySelector('#crest-layer');
 
-    async function toggleCrest() {
-        const btn = document.querySelector('#crestBtn');
+    // Force sync and force scale
+    const sync = () => {
+        crest.cameraOrbit = main.cameraOrbit;
+        crest.fieldOfView = main.fieldOfView;
         
-        // If crest doesn't exist, create it as a 'child' of the scene
-        if (!crestInstance) {
-            const scene = viewer.shadowRoot.querySelector('.container');
-            
-            // We create a second internal model
-            crestInstance = document.createElement('model-viewer');
-            crestInstance.src = "Crest_1.glb";
-            crestInstance.setAttribute('center-model', 'false');
-            crestInstance.style.position = "absolute";
-            crestInstance.style.top = "0";
-            crestInstance.style.left = "0";
-            crestInstance.style.width = "100%";
-            crestInstance.style.height = "100%";
-            crestInstance.style.pointerEvents = "none";
-            
-            // Force the crest to sync with the Griffin's camera
-            viewer.addEventListener('camera-change', () => {
-                crestInstance.cameraOrbit = viewer.cameraOrbit;
-                crestInstance.fieldOfView = viewer.fieldOfView;
-                crestInstance.cameraTarget = viewer.getCameraTarget();
-            });
+        const target = main.getCameraTarget();
+        crest.cameraTarget = `${target.x}m ${target.y}m ${target.z}m`;
+    };
 
-            viewer.appendChild(crestInstance);
-            btn.classList.add('active');
-        } else {
-            // Remove it
-            crestInstance.remove();
-            crestInstance = null;
-            btn.classList.remove('active');
-        }
+    main.addEventListener('camera-change', sync);
+
+    // This manually shrinks the Crest if it's too big
+    function adjustCrest(s) {
+        crest.scale = `${s} ${s} ${s}`;
     }
 
     async function applyAll(img) {
-        if (!viewer.model) return;
-        const texture = await viewer.createTexture(img);
-        
-        // Apply to Body
-        viewer.model.materials.forEach(mat => {
-            if (mat.pbrMetallicRoughness.baseColorTexture) {
-                mat.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
+        const texture = await main.createTexture(img);
+        [main, crest].forEach(v => {
+            if (v.model) {
+                v.model.materials.forEach(mat => {
+                    if (mat.pbrMetallicRoughness.baseColorTexture) {
+                        mat.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
+                    }
+                });
             }
         });
-
-        // Apply to Crest if it is currently toggled on
-        if (crestInstance && crestInstance.model) {
-            crestInstance.model.materials.forEach(mat => {
-                if (mat.pbrMetallicRoughness.baseColorTexture) {
-                    mat.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
-                }
-            });
-        }
     }
+
+    // Set a default small scale on load
+    crest.addEventListener('load', () => {
+        crest.scale = "1 1 1"; // Start at 1, change if still huge
+    });
 </script>
 
 </body>
