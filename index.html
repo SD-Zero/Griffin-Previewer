@@ -30,11 +30,9 @@
         summary::after { content: '▼'; font-size: 10px; color: #ff9d00; }
         details[open] summary::after { content: '▲'; }
 
-        /* NESTED PALETTES */
         .palette-group { background: #1a1a1a; padding: 5px; border-top: 1px solid #444; }
         .color-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 10px; }
         
-        /* COLOR SWATCHES */
         .swatch { 
             width: 100%; aspect-ratio: 1; border-radius: 3px; border: 1px solid #555; 
             cursor: pointer; font-size: 0;
@@ -49,14 +47,15 @@
         }
 
         .button-stack { display: flex; flex-direction: column; padding: 10px; gap: 5px; }
-        button.part-btn { background: #444; color: white; border: 1px solid #555; padding: 10px; text-align: left; border-radius: 4px; }
+        button.part-btn { background: #444; color: white; border: 1px solid #555; padding: 10px; text-align: left; border-radius: 4px; cursor: pointer; }
+        button.part-btn:hover { background: #555; }
         button:active { background: #ff9d00; color: black; }
     </style>
 </head>
 <body>
 
 <div class="viewer-container">
-    <model-viewer id="griffin" src="Griffin_LQ_Body_Mesh.glb" camera-controls interaction-prompt="none" shadow-intensity="1" exposure="1.2"></model-viewer>
+    <model-viewer id="griffin" src="griffin.glb" camera-controls interaction-prompt="none" shadow-intensity="1" exposure="1.2"></model-viewer>
     <model-viewer id="crest-v" src="" interaction-prompt="none" center-model="false"></model-viewer>
     <model-viewer id="wings-v" src="" interaction-prompt="none" center-model="false"></model-viewer>
     <model-viewer id="tail-v" src="" interaction-prompt="none" center-model="false"></model-viewer>
@@ -74,28 +73,27 @@
     </div></details>
 
     <details class="main-nav"><summary>Crests</summary><div class="button-stack">
-        <button class="part-btn" onclick="changePart('crest', 'Bestial_Crest.glb')">Bestial</button>
-        <button class="part-btn" onclick="changePart('crest', 'Pinnacle_Crest.glb')">Pinnacle</button>
-        <button class="part-btn" onclick="changePart('crest', 'Windswept_Crest.glb')">Windswept</button>
-        <button class="part-btn" onclick="changePart('crest', 'Harpy_Crest.glb')">Harpy</button>
+        <button class="part-btn" onclick="changePart('crest', 'bestial.glb')">Bestial</button>
+        <button class="part-btn" onclick="changePart('crest', 'pinnacle.glb')">Pinnacle</button>
+        <button class="part-btn" onclick="changePart('crest', 'windswept.glb')">Windswept</button>
+        <button class="part-btn" onclick="changePart('crest', 'harpy.glb')">Harpy</button>
         <button class="part-btn" onclick="changePart('crest', '')">None</button>
     </div></details>
 
     <details class="main-nav"><summary>Wings</summary><div class="button-stack">
-        <button class="part-btn" onclick="changePart('wings', 'Heroic_Wings.glb')">Heroic</button>
-        <button class="part-btn" onclick="changePart('wings', 'Osprey_Wings.glb')">Osprey</button>
-        <button class="part-btn" onclick="changePart('wings', 'Manticore_Wings.glb')">Manticore</button>
-        <button class="part-btn" onclick="changePart('wings', 'Scarab_Wings.glb')">Scarab</button>
-        <button class="part-btn" onclick="changePart('wings', 'Seraph_Wings.glb')">Seraph</button>
+        <button class="part-btn" onclick="changePart('wings', 'heroic.glb')">Heroic</button>
+        <button class="part-btn" onclick="changePart('wings', 'osprey.glb')">Osprey</button>
+        <button class="part-btn" onclick="changePart('wings', 'manticore.glb')">Manticore</button>
+        <button class="part-btn" onclick="changePart('wings', 'scarab.glb')">Scarab</button>
+        <button class="part-btn" onclick="changePart('wings', 'seraph.glb')">Seraph</button>
         <button class="part-btn" onclick="changePart('wings', '')">None</button>
     </div></details>
 
     <details class="main-nav"><summary>Tails</summary><div class="button-stack">
-        <button class="part-btn" onclick="changePart('tail', 'Fanned_Tail.glb')">Fanned</button>
-        <button class="part-btn" onclick="changePart('tail', 'Quetzal_Tail.glb')">Quetzal</button>
-        <button class="part-btn" onclick="changePart('tail', 'Svelte_Tail.glb')">Svelte</button>
-        <button class="part-btn" onclick="changePart('tail', 'Tufted_Tail.glb')">Tufted</button>
-        <button class="part-btn" onclick="changePart('tail', 'Scorpio_Tail.glb')">Scorpio</button>
+        <button class="part-btn" onclick="changePart('tail', 'fanned.glb')">Fanned</button>
+        <button class="part-btn" onclick="changePart('tail', 'svelte.glb')">Svelte</button>
+        <button class="part-btn" onclick="changePart('tail', 'tufted.glb')">Tufted</button>
+        <button class="part-btn" onclick="changePart('tail', 'scorpio.glb')">Scorpio</button>
         <button class="part-btn" onclick="changePart('tail', '')">None</button>
     </div></details>
 
@@ -120,7 +118,6 @@
         { name: "Warm Tangerine", count: 15 }
     ];
 
-    // Build the color palettes
     ["primary", "secondary", "tertiary"].forEach(section => {
         const container = document.getElementById(`${section}-container`);
         paletteData.forEach(p => {
@@ -130,7 +127,7 @@
             container.appendChild(det);
             
             const grid = det.querySelector('.color-grid');
-for(let i=0; i<p.count; i++) {
+            for(let i=0; i<p.count; i++) {
                 const s = document.createElement('div');
                 s.className = "swatch";
                 const placeholderHex = `hsl(${(i * 360) / p.count}, 50%, 50%)`; 
@@ -149,7 +146,6 @@ for(let i=0; i<p.count; i++) {
         });
     });
 
-    // ACCORDION LOGIC: Only one main nav can be open
     const allDetails = document.querySelectorAll('details.main-nav');
     allDetails.forEach(targetDetail => {
         targetDetail.addEventListener('click', () => {
@@ -159,8 +155,7 @@ for(let i=0; i<p.count; i++) {
         });
     });
 
-    // --- PREVIOUS 3D LOGIC ---
-const main = document.querySelector('#griffin');
+    const main = document.querySelector('#griffin');
     const parts = { 
         crest: document.querySelector('#crest-v'), 
         wings: document.querySelector('#wings-v'), 
@@ -175,15 +170,10 @@ const main = document.querySelector('#griffin');
     };
 
     function setColor(type, hex, element) {
-        // Update the stored color
         colors[type] = hex;
-
-        // Visual feedback: remove active class from others in this section and add to this one
         const container = element.parentElement;
         container.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
         element.classList.add('active');
-
-        // Apply to the 3D models
         updateMaterials();
     }
 
@@ -196,33 +186,34 @@ const main = document.querySelector('#griffin');
         });
     });
 
-async function updateMaterials() {
+    async function updateMaterials() {
         const viewers = [main, ...Object.values(parts)];
         
         for (const v of viewers) {
             if (v.src && v.model) {
-                // Apply the pattern texture
-                const texture = await v.createTexture(currentPattern);
-                
-                v.model.materials.forEach(mat => {
-                    if (mat.pbrMetallicRoughness.baseColorTexture) {
-                        mat.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
-                    }
+                for (const mat of v.model.materials) {
                     
-                    // This tints the model based on the PRIMARY color
+                    // 1. If it's the Body material, swap the pattern texture
+                    // Ensure your Body material in Blender is named "Griffin_Main"
+                    if (mat.name === "Griffin_Main") {
+                        const texture = await v.createTexture(currentPattern);
+                        if (mat.pbrMetallicRoughness.baseColorTexture) {
+                            mat.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
+                        }
+                    }
+
+                    // 2. Tint based on the PRIMARY color selected
                     const rgb = hexToRgb(colors.primary);
                     if (mat.pbrMetallicRoughness) {
                         mat.pbrMetallicRoughness.setBaseColorFactor([rgb.r/255, rgb.g/255, rgb.b/255, 1]);
                     }
-                });
+                }
             }
         }
     }
 
-    // Helper function to turn hex/hsl to RGB for the 3D engine
     function hexToRgb(hex) {
         if(hex.startsWith('hsl')) {
-            // This is a temporary converter for the placeholder HSL colors
             let sep = hex.indexOf(",") > -1 ? "," : " ";
             let hsl = hex.substr(4).split(")")[0].split(sep);
             let h = hsl[0], s = hsl[1].substr(0,hsl[1].length-1) / 100, l = hsl[2].substr(0,hsl[2].length-1) / 100;
@@ -238,7 +229,6 @@ async function updateMaterials() {
         } : {r: 255, g: 255, b: 255};
     }
 
-    // Updated functions to call the new updateMaterials logic
     async function changePattern(fileName) {
         currentPattern = fileName;
         updateMaterials();
@@ -247,7 +237,10 @@ async function updateMaterials() {
     function changePart(type, file) {
         const target = parts[type];
         target.src = file;
-        target.addEventListener('load', () => updateMaterials(), { once: true });
+        // Listen for the model to finish loading before trying to apply colors/textures
+        target.addEventListener('model-visibility', () => {
+            updateMaterials();
+        }, { once: true });
     }
 </script>
 
