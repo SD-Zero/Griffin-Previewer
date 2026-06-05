@@ -34,8 +34,7 @@
 
         .palette-group { background: #1a1a1a; padding: 5px; border-top: 1px solid #444; }
         .color-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 10px; }
-        .swatch { width: 100%; aspect-ratio: 1; border-radius: 3px; border: 1px solid #555; cursor: pointer; transition: transform 0.1s; }
-        .swatch:hover { transform: scale(1.1); border-color: #fff; }
+        .swatch { width: 100%; aspect-ratio: 1; border-radius: 3px; border: 1px solid #555; cursor: pointer; }
         .swatch.active { border: 2px solid white; box-shadow: 0 0 5px #ff9d00; }
         .random-btn { grid-column: span 4; background: #444; color: #ff9d00; border: 1px solid #ff9d00; padding: 5px; cursor: pointer; border-radius: 4px; font-weight: bold; margin-top: 5px; }
 
@@ -115,7 +114,7 @@
         paletteData.forEach(p => {
             const det = document.createElement('details');
             det.className = "palette-group";
-            det.innerHTML = `<summary style="font-size:12px;">${p.name} (${p.count})</summary><div class="color-grid" id="${section}-${p.name.replace(/\s/g, '')}"></div>`;
+            det.innerHTML = `<summary style="font-size:12px;">${p.name} (${p.count})</summary><div class="color-grid"></div>`;
             container.appendChild(det);
             const grid = det.querySelector('.color-grid');
             for(let i=0; i<p.count; i++) {
@@ -132,40 +131,51 @@
     const main = document.querySelector('#griffin');
     const parts = { crest: document.querySelector('#crest-v'), wings: document.querySelector('#wings-v'), tail: document.querySelector('#tail-v') };
     let currentPattern = 'Griffin_Pattern00_HQ.png';
-    let colors = { primary: '#ffffff', secondary: '#ffffff', tertiary: '#ffffff' };
+    let colors = { primary: '#ffffff' };
 
     function setColor(type, hex, element) {
-        colors[type] = hex;
+        colors.primary = hex;
         updateMaterials();
     }
 
-    main.addEventListener('camera-change', () => {
+    // High-performance camera sync to stop "multiplying" lag
+    function syncCameras() {
         const orbit = main.getCameraOrbit();
         const fov = main.getFieldOfView();
+        const target = main.getCameraTarget();
+        
         Object.values(parts).forEach(v => {
             v.cameraOrbit = `${orbit.theta}rad ${orbit.phi}rad ${orbit.radius}m`;
             v.fieldOfView = `${fov}deg`;
+            v.cameraTarget = `${target.x}m ${target.y}m ${target.z}m`;
         });
-    });
+        requestAnimationFrame(syncCameras);
+    }
+    main.addEventListener('poster-dismissed', syncCameras);
 
     async function updateMaterials() {
-        const viewers = [main, ...Object.values(parts)];
-        for (const v of viewers) {
-            if (v.src && v.model) {
-                for (const mat of v.model.materials) {
-                    // ONLY swap texture if it's the main body material
-                    if (mat.name === "Material" || mat.name === "Griffin_Main") {
-                        const texture = await v.createTexture(currentPattern);
-                        if (mat.pbrMetallicRoughness.baseColorTexture) {
-                            mat.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
-                        }
+        // Handle Body Texture
+        if (main.model) {
+            for (const mat of main.model.materials) {
+                if (mat.name === "Material" || mat.name === "Griffin_Main") {
+                    const texture = await main.createTexture(currentPattern);
+                    if (mat.pbrMetallicRoughness.baseColorTexture) {
+                        mat.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
                     }
-                    // Apply color factor to all materials
-                    const rgb = hexToRgb(colors.primary);
-                    mat.pbrMetallicRoughness.setBaseColorFactor([rgb.r/255, rgb.g/255, rgb.b/255, 1]);
                 }
             }
         }
+
+        // Apply Tints to everything (Body + Traits)
+        const viewers = [main, ...Object.values(parts)];
+        const rgb = hexToRgb(colors.primary);
+        viewers.forEach(v => {
+            if (v.model) {
+                v.model.materials.forEach(mat => {
+                    mat.pbrMetallicRoughness.setBaseColorFactor([rgb.r/255, rgb.g/255, rgb.b/255, 1]);
+                });
+            }
+        });
     }
 
     function hexToRgb(hex) {
