@@ -102,7 +102,7 @@
     const main = document.querySelector('#griffin');
     const parts = { crest: document.querySelector('#crest-v'), wings: document.querySelector('#wings-v'), tail: document.querySelector('#tail-v') };
     
-    let colors = { primary: {r:255, g:255, b:255}, secondary: {r:200, g:200, b:200}, tertiary: {r:150, g:150, b:150} };
+    let colors = { primary: {r:255, g:255, b:255}, secondary: {r:255, g:255, b:255}, tertiary: {r:255, g:255, b:255} };
     let currentPattern = 'Griffin_Pattern00_HQ.png';
 
     ["primary", "secondary", "tertiary"].forEach(type => {
@@ -117,8 +117,8 @@
                 const s = document.createElement('div');
                 s.className = "swatch";
                 const h = (i * 360) / p.count;
-                s.style.background = `hsl(${h}, 50%, 50%)`;
-                s.onclick = () => { colors[type] = hslToRgb(h, 0.5, 0.5); updateAllMaterials(); };
+                s.style.background = `hsl(${h}, 70%, 60%)`; // Boosted UI swatches
+                s.onclick = () => { colors[type] = hslToRgb(h, 0.7, 0.6); updateAllMaterials(); };
                 grid.appendChild(s);
             }
         });
@@ -142,17 +142,33 @@
         for (let i = 0; i < data.length; i += 4) {
             const r = data[i], g = data[i+1], b = data[i+2];
             let targetColor = null;
+            let baseBrightnessRef = 1.0;
 
-            // Detection Logic
-            if (r > 150 && g < 100 && b < 100) targetColor = colors.primary; // RED
-            else if (r > 150 && g > 150 && b < 100) targetColor = colors.secondary; // YELLOW
-            else if ((r > 150 && b > 150) || b > 150 || (g > 150 && r < 100)) targetColor = colors.tertiary; // PINK/BLUE/GREEN
+            // Detection with specific "Base Brightness" compensation
+            if (r > 150 && g < 120 && b < 120) { // RED (Primary)
+                targetColor = colors.primary;
+                baseBrightnessRef = 0.35; // Red is dim, so we boost it more
+            } 
+            else if (r > 150 && g > 150 && b < 100) { // YELLOW (Secondary)
+                targetColor = colors.secondary;
+                baseBrightnessRef = 0.85; // Yellow is bright, keep it as is
+            } 
+            else if ((r > 120 && b > 120) || b > 150 || (g > 150 && r < 120)) { // PINK/BLUE/GREEN (Tertiary)
+                targetColor = colors.tertiary;
+                baseBrightnessRef = 0.45; // Pink/Blue is mid-range
+            }
 
             if (targetColor) {
-                // BRIGHTNESS EXTRACTION: Convert original color to grayscale (0-1 range)
-                // This removes the "Red tint" but keeps the shading/highlights
-                const brightness = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+                // Calculate raw brightness
+                let brightness = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
                 
+                // NORMALIZATION: Map the original texture color to full white starting point
+                // This removes the "darkening" effect of the original red/pink pixels.
+                brightness = brightness / baseBrightnessRef;
+                
+                // Clamp it so highlights don't "blow out" too much
+                brightness = Math.min(brightness, 1.2);
+
                 data[i] = targetColor.r * brightness;
                 data[i+1] = targetColor.g * brightness;
                 data[i+2] = targetColor.b * brightness;
