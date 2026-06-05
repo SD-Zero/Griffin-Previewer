@@ -8,26 +8,14 @@
     <style>
         body { margin: 0; background: #1a1a1a; color: white; font-family: sans-serif; display: flex; height: 100vh; overflow: hidden; }
         .viewer-container { flex: 1; position: relative; background: radial-gradient(#333, #000); }
-        
-        model-viewer { 
-            width: 100%; height: 100%; position: absolute; top: 0; left: 0; 
-            background-color: transparent; --poster-color: transparent;
-        }
-
-        #griffin { z-index: 1; }
+        model-viewer { width: 100%; height: 100%; position: absolute; top: 0; left: 0; background-color: transparent; }
         #crest-v, #wings-v, #tail-v { z-index: 2; pointer-events: none; visibility: hidden; }
-
-        .sidebar { 
-            width: 320px; background: #222; border-left: 2px solid #ff9d00; 
-            display: flex; flex-direction: column; overflow-y: auto; padding: 10px;
-        }
+        .sidebar { width: 320px; background: #222; border-left: 2px solid #ff9d00; display: flex; flex-direction: column; overflow-y: auto; padding: 10px; }
         h2 { font-size: 16px; color: #ff9d00; text-align: center; margin: 10px 0; border-bottom: 1px solid #444; padding-bottom: 10px; }
         details { margin-bottom: 5px; background: #2d2d2d; border-radius: 4px; }
         summary { padding: 12px; font-weight: bold; cursor: pointer; background: #333; display: flex; justify-content: space-between; list-style: none; }
-        
         .button-stack { display: flex; flex-direction: column; padding: 10px; gap: 5px; }
         button.part-btn { background: #444; color: white; border: 1px solid #555; padding: 10px; text-align: left; border-radius: 4px; cursor: pointer; }
-        
         .palette-group { background: #1a1a1a; padding: 5px; border-top: 1px solid #444; }
         .color-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 10px; }
         .swatch { width: 100%; aspect-ratio: 1; border-radius: 3px; cursor: pointer; border: 1px solid #444; }
@@ -44,7 +32,6 @@
 
 <div class="sidebar">
     <h2>GRIFFIN EDITOR</h2>
-
     <details open><summary>Patterns</summary><div class="button-stack">
         <button class="part-btn" onclick="changePattern('Griffin_Pattern00_HQ.png')">Drifter</button>
         <button class="part-btn" onclick="changePattern('Griffin_Pattern02_HQ.png')">Duochrome</button>
@@ -52,7 +39,6 @@
         <button class="part-btn" onclick="changePattern('Griffin_Pattern03_HQ.png')">Stealthy</button>
         <button class="part-btn" onclick="changePattern('Griffin_Pattern04_HQ.png')">Harfang</button>
     </div></details>
-
     <details><summary>Crests</summary><div class="button-stack">
         <button class="part-btn" onclick="changePart('crest', 'bestial.glb')">Bestial</button>
         <button class="part-btn" onclick="changePart('crest', 'pinnacle.glb')">Pinnacle</button>
@@ -60,7 +46,6 @@
         <button class="part-btn" onclick="changePart('crest', 'harpy.glb')">Harpy</button>
         <button class="part-btn" onclick="changePart('crest', '')">None</button>
     </div></details>
-
     <details><summary>Wings</summary><div class="button-stack">
         <button class="part-btn" onclick="changePart('wings', 'heroic.glb')">Heroic</button>
         <button class="part-btn" onclick="changePart('wings', 'osprey.glb')">Osprey</button>
@@ -69,7 +54,6 @@
         <button class="part-btn" onclick="changePart('wings', 'seraph.glb')">Seraph</button>
         <button class="part-btn" onclick="changePart('wings', '')">None</button>
     </div></details>
-
     <details><summary>Tails</summary><div class="button-stack">
         <button class="part-btn" onclick="changePart('tail', 'fanned.glb')">Fanned</button>
         <button class="part-btn" onclick="changePart('tail', 'svelte.glb')">Svelte</button>
@@ -77,7 +61,6 @@
         <button class="part-btn" onclick="changePart('tail', 'scorpio.glb')">Scorpio</button>
         <button class="part-btn" onclick="changePart('tail', '')">None</button>
     </div></details>
-
     <details><summary>Primary Color</summary><div id="primary-container"></div></details>
     <details><summary>Secondary Color</summary><div id="secondary-container"></div></details>
     <details><summary>Tertiary Color</summary><div id="tertiary-container"></div></details>
@@ -101,7 +84,6 @@
 
     const main = document.querySelector('#griffin');
     const parts = { crest: document.querySelector('#crest-v'), wings: document.querySelector('#wings-v'), tail: document.querySelector('#tail-v') };
-    
     let colors = { primary: {r:255, g:255, b:255}, secondary: {r:255, g:255, b:255}, tertiary: {r:255, g:255, b:255} };
     let currentPattern = 'Griffin_Pattern00_HQ.png';
 
@@ -117,7 +99,7 @@
                 const s = document.createElement('div');
                 s.className = "swatch";
                 const h = (i * 360) / p.count;
-                s.style.background = `hsl(${h}, 70%, 60%)`; // Boosted UI swatches
+                s.style.background = `hsl(${h}, 70%, 60%)`;
                 s.onclick = () => { colors[type] = hslToRgb(h, 0.7, 0.6); updateAllMaterials(); };
                 grid.appendChild(s);
             }
@@ -129,52 +111,34 @@
         img.crossOrigin = "anonymous";
         img.src = imgSrc;
         await img.decode();
-
         const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
+        canvas.width = img.width; canvas.height = img.height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0);
-
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const data = imageData.data;
 
         for (let i = 0; i < data.length; i += 4) {
             const r = data[i], g = data[i+1], b = data[i+2];
-            let targetColor = null;
-            let baseBrightnessRef = 1.0;
+            // Protection: Skip pixels that are very dark (prevents "solid color" beak issues)
+            if (r < 30 && g < 30 && b < 30) continue;
 
-            // Detection with specific "Base Brightness" compensation
-            if (r > 150 && g < 120 && b < 120) { // RED (Primary)
-                targetColor = colors.primary;
-                baseBrightnessRef = 0.35; // Red is dim, so we boost it more
-            } 
-            else if (r > 150 && g > 150 && b < 100) { // YELLOW (Secondary)
-                targetColor = colors.secondary;
-                baseBrightnessRef = 0.85; // Yellow is bright, keep it as is
-            } 
-            else if ((r > 120 && b > 120) || b > 150 || (g > 150 && r < 120)) { // PINK/BLUE/GREEN (Tertiary)
-                targetColor = colors.tertiary;
-                baseBrightnessRef = 0.45; // Pink/Blue is mid-range
-            }
+            let targetColor = null;
+            let ref = 1.0;
+
+            if (r > 130 && g < 110 && b < 110) { targetColor = colors.primary; ref = 0.5; } 
+            else if (r > 140 && g > 140 && b < 110) { targetColor = colors.secondary; ref = 0.9; } 
+            else if (b > 120 || (r > 130 && b > 130) || (g > 130 && r < 110)) { targetColor = colors.tertiary; ref = 0.6; }
 
             if (targetColor) {
-                // Calculate raw brightness
-                let brightness = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-                
-                // NORMALIZATION: Map the original texture color to full white starting point
-                // This removes the "darkening" effect of the original red/pink pixels.
-                brightness = brightness / baseBrightnessRef;
-                
-                // Clamp it so highlights don't "blow out" too much
-                brightness = Math.min(brightness, 1.2);
-
-                data[i] = targetColor.r * brightness;
-                data[i+1] = targetColor.g * brightness;
-                data[i+2] = targetColor.b * brightness;
+                const brightness = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+                // Balanced Normalization
+                const factor = brightness / ref;
+                data[i] = targetColor.r * factor;
+                data[i+1] = targetColor.g * factor;
+                data[i+2] = targetColor.b * factor;
             }
         }
-
         ctx.putImageData(imageData, 0, 0);
         return canvas.toDataURL();
     }
@@ -193,7 +157,6 @@
                 }
             }
         }
-
         for (const [key, v] of Object.entries(parts)) {
             if (v.getAttribute('src') && v.model) {
                 const rawTex = (key === 'wings') ? 'Griffin_Wings.png' : 'Griffin_Tails_Crests.png';
@@ -234,24 +197,14 @@
     sync();
 
     function changePart(type, file) {
-        const v = parts[type];
-        v.style.visibility = "hidden";
-        if (!file || file === "") { v.removeAttribute('src'); return; }
+        const v = parts[type]; v.style.visibility = "hidden";
+        if (!file) { v.removeAttribute('src'); return; }
         v.setAttribute('src', file);
         v.addEventListener('model-visibility', () => updateAllMaterials(), { once: true });
     }
 
-    function changePattern(file) {
-        currentPattern = file;
-        updateAllMaterials();
-    }
-
-    window.onload = () => {
-        changePart('crest', 'bestial.glb');
-        changePart('wings', 'manticore.glb');
-        changePart('tail', 'fanned.glb');
-    };
-
+    function changePattern(file) { currentPattern = file; updateAllMaterials(); }
+    window.onload = () => { changePart('crest', 'bestial.glb'); changePart('wings', 'manticore.glb'); changePart('tail', 'fanned.glb'); };
     main.addEventListener('model-visibility', updateAllMaterials);
 </script>
 </body>
