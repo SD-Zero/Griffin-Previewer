@@ -25,13 +25,16 @@
         details { margin-bottom: 5px; background: #2d2d2d; border-radius: 4px; }
         summary { padding: 12px; font-weight: bold; cursor: pointer; background: #333; display: flex; justify-content: space-between; list-style: none; }
         summary::after { content: '▼'; font-size: 10px; color: #ff9d00; }
-        
+        details[open] summary::after { content: '▲'; }
+
         .button-stack { display: flex; flex-direction: column; padding: 10px; gap: 5px; }
         button.part-btn { background: #444; color: white; border: 1px solid #555; padding: 10px; text-align: left; border-radius: 4px; cursor: pointer; }
-        
+        button:active { background: #ff9d00; color: black; }
+
         .palette-group { background: #1a1a1a; padding: 5px; border-top: 1px solid #444; }
         .color-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 10px; }
         .swatch { width: 100%; aspect-ratio: 1; border-radius: 3px; cursor: pointer; border: 1px solid #444; }
+        .swatch.active { border: 2px solid white; box-shadow: 0 0 5px #ff9d00; }
     </style>
 </head>
 <body>
@@ -76,6 +79,7 @@
         <button class="part-btn" onclick="changePart('tail', 'svelte.glb')">Svelte</button>
         <button class="part-btn" onclick="changePart('tail', 'tufted.glb')">Tufted</button>
         <button class="part-btn" onclick="changePart('tail', 'scorpio.glb')">Scorpio</button>
+        <button class="part-btn" onclick="changePart('tail', '')">None</button>
     </div></details>
 
     <details><summary>Primary Color</summary><div id="primary-container"></div></details>
@@ -104,7 +108,7 @@
     let currentPattern = 'Griffin_Pattern00_HQ.png';
     let primaryColor = '#ffffff';
 
-    // Generate full color UI
+    // Generate Color UI
     ["primary", "secondary", "tertiary"].forEach(section => {
         const container = document.getElementById(`${section}-container`);
         paletteData.forEach(p => {
@@ -129,7 +133,7 @@
         const fov = main.getFieldOfView();
         const target = main.getCameraTarget();
         Object.values(parts).forEach(v => {
-            if(v.src && v.src !== "") {
+            if(v.getAttribute('src')) {
                 v.cameraOrbit = `${orbit.theta}rad ${orbit.phi}rad ${orbit.radius}m`;
                 v.fieldOfView = `${fov}deg`;
                 v.cameraTarget = `${target.x}m ${target.y}m ${target.z}m`;
@@ -142,7 +146,7 @@
     async function updateMaterials() {
         if (main.model) {
             for (const mat of main.model.materials) {
-                if (mat.name.toLowerCase().includes("pattern") || mat.name === "Material") {
+                if (mat.name.toLowerCase().includes("pattern") || mat.name === "Material" || mat.name === "Griffin_Main") {
                     const tex = await main.createTexture(currentPattern);
                     if (mat.pbrMetallicRoughness.baseColorTexture) mat.pbrMetallicRoughness.baseColorTexture.setTexture(tex);
                 }
@@ -152,7 +156,7 @@
         }
 
         for (const [key, v] of Object.entries(parts)) {
-            if (v.src && v.model) {
+            if (v.getAttribute('src') && v.model) {
                 for (const mat of v.model.materials) {
                     const texFile = (key === 'wings') ? 'Griffin_Wings.png' : 'Griffin_Tails_Crests.png';
                     const texture = await v.createTexture(texFile);
@@ -179,8 +183,14 @@
     function changePart(type, file) {
         const v = parts[type];
         v.style.visibility = "hidden";
-        v.src = file || "";
-        if (file) v.addEventListener('model-visibility', () => updateMaterials(), { once: true });
+        
+        if (!file || file === "") {
+            v.removeAttribute('src');
+            return;
+        }
+        
+        v.setAttribute('src', file);
+        v.addEventListener('model-visibility', () => updateMaterials(), { once: true });
     }
 
     function changePattern(file) {
@@ -189,9 +199,17 @@
     }
 
     window.onload = () => {
-        changePart('crest', 'bestial.glb');
-        changePart('wings', 'manticore.glb');
-        changePart('tail', 'fanned.glb');
+        // Clear all first to be safe
+        changePart('crest', '');
+        changePart('wings', '');
+        changePart('tail', '');
+        
+        // Load defaults
+        setTimeout(() => {
+            changePart('crest', 'bestial.glb');
+            changePart('wings', 'manticore.glb');
+            changePart('tail', 'fanned.glb');
+        }, 100);
     };
 
     main.addEventListener('model-visibility', updateMaterials);
