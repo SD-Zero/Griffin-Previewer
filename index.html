@@ -2,35 +2,93 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Animal Jam Griffin Previewer</title>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.3.1/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; background: #1a1a1a; color: #eee; font-family: 'Verdana', sans-serif; display: flex; flex-direction: column; height: 100vh; }
-        header { padding: 10px; text-align: center; background: #222; border-bottom: 2px solid #ff9d00; }
-        model-viewer { flex: 1; width: 100%; background: radial-gradient(#333, #000); }
-        .ui-panel { padding: 15px; background: #222; display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
-        .group { border: 1px solid #444; padding: 10px; border-radius: 10px; background: #2d2d2d; }
+        body { 
+            margin: 0; 
+            background: #1a1a1a; 
+            color: #eee; 
+            font-family: 'Verdana', sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh; 
+            overflow: hidden;
+        }
+        header { 
+            padding: 10px; 
+            text-align: center; 
+            background: #222; 
+            border-bottom: 2px solid #ff9d00; 
+        }
+        /* The 3D Window */
+        .viewer-container {
+            flex: 1;
+            position: relative;
+            width: 100%;
+            background: radial-gradient(#333, #000);
+        }
+        model-viewer { 
+            width: 100%; 
+            height: 100%; 
+        }
+        /* The Control Panel */
+        .ui-panel { 
+            padding: 15px; 
+            background: #222; 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 15px; 
+            justify-content: center; 
+            max-height: 40vh;
+            overflow-y: auto;
+        }
+        .group { 
+            border: 1px solid #444; 
+            padding: 10px; 
+            border-radius: 10px; 
+            background: #2d2d2d; 
+            min-width: 150px;
+        }
         h4 { margin: 0 0 10px 0; font-size: 14px; color: #ff9d00; text-transform: uppercase; }
-        button { background: #444; color: white; border: 1px solid #666; padding: 8px 12px; cursor: pointer; border-radius: 5px; transition: 0.2s; }
+        button { 
+            background: #444; 
+            color: white; 
+            border: 1px solid #666; 
+            padding: 8px 12px; 
+            cursor: pointer; 
+            border-radius: 5px; 
+            margin: 2px;
+            font-size: 12px;
+        }
         button:hover { background: #ff9d00; color: black; }
+        button.active { background: #ff9d00; color: black; }
     </style>
 </head>
 <body>
 
 <header>
-    <h2>Griffin 3D Previewer</h2>
+    <h2 style="margin:0;">Griffin Previewer</h2>
 </header>
 
-<model-viewer id="griffin" 
-    src="Griffin_LQ_Body_Mesh.glb" 
-    camera-controls 
-    auto-rotate 
-    shadow-intensity="1" 
-    environment-image="neutral"
-    exposure="1">
-    
-    <model-viewer id="crest-layer" src="Crest_1.glb" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></model-viewer>
-</model-viewer>
+<div class="viewer-container">
+    <model-viewer id="griffin" 
+        src="Griffin_LQ_Body_Mesh.glb" 
+        camera-controls 
+        auto-rotate 
+        shadow-intensity="1" 
+        environment-image="neutral"
+        exposure="1"
+        bounds="tight">
+        
+        <model-viewer id="crest-layer" 
+            src="Crest_1.glb" 
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"
+            bounds="tight">
+        </model-viewer>
+    </model-viewer>
+</div>
 
 <div class="ui-panel">
     <div class="group">
@@ -53,15 +111,25 @@
     const griffinModel = document.querySelector('#griffin');
     const crestModel = document.querySelector('#crest-layer');
 
+    // Function to change the texture of the base model
     async function changePattern(fileName) {
-        // This ensures the pattern applies to the base griffin
+        if (!griffinModel.model) {
+            console.error("Model not loaded yet");
+            return;
+        }
         const material = griffinModel.model.materials[0];
         const texture = await griffinModel.createTexture(fileName);
-        material.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
+        // Applies texture to the "Base Color" slot
+        if (material.pbrMetallicRoughness && material.pbrMetallicRoughness.baseColorTexture) {
+            material.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
+        }
     }
 
+    // Function to hide or show the crest model
     function toggleCrest(isVisible) {
-        crestModel.style.display = isVisible ? "block" : "none";
+        crestModel.style.visibility = isVisible ? "visible" : "hidden";
+        // If hidden, we also move it away so it doesn't block the camera
+        crestModel.style.opacity = isVisible ? "1" : "0";
     }
 </script>
 
