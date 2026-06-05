@@ -9,6 +9,7 @@
         body { margin: 0; background: #111; color: white; font-family: sans-serif; display: flex; height: 100vh; overflow: hidden; }
         .viewer-container { flex: 1; position: relative; background: radial-gradient(#333, #000); }
         
+        /* Forces every layer to occupy the exact same screen real estate */
         model-viewer { 
             position: absolute; 
             top: 0; left: 0; width: 100%; height: 100%; 
@@ -37,10 +38,12 @@
 
 <div class="viewer-container">
     <model-viewer id="griffin" src="griffin.glb" camera-controls auto-rotate interaction-prompt="none" shadow-intensity="1" exposure="1.2" environment-image="neutral"></model-viewer>
-    <model-viewer id="crest-v" src="" interaction-prompt="none"></model-viewer>
-    <model-viewer id="wings-v" src="" interaction-prompt="none"></model-viewer>
-    <model-viewer id="tail-v" src="" interaction-prompt="none"></model-viewer>
-    <model-viewer id="eyes-v" src="Griffin_LQ_Eyes_Mesh.glb" interaction-prompt="none"></model-viewer>
+    
+    <model-viewer id="crest-v" src="" camera-controls interaction-prompt="none" shadow-intensity="1" exposure="1.2" environment-image="neutral"></model-viewer>
+    <model-viewer id="wings-v" src="" camera-controls interaction-prompt="none" shadow-intensity="1" exposure="1.2" environment-image="neutral"></model-viewer>
+    <model-viewer id="tail-v" src="" camera-controls interaction-prompt="none" shadow-intensity="1" exposure="1.2" environment-image="neutral"></model-viewer>
+    
+    <model-viewer id="eyes-v" src="Griffin_LQ_Eyes_Mesh.glb" camera-controls interaction-prompt="none" shadow-intensity="1" exposure="1.2" environment-image="neutral"></model-viewer>
 </div>
 
 <div class="sidebar">
@@ -164,18 +167,18 @@
             const r = data[i], g = data[i+1], b = data[i+2];
             
             if (isEye) {
-                // RED BACKGROUND TO BLACK: If it's mostly red but no green, it's the background.
-                // YELLOW SHAPES TO COLOR: If R and G are both high, it's the shape we want to tint.
-                if (g > 80 && r > 80) { 
+                // STRICT COLORING:
+                // Yellow pixels (High R and High G) get the Eye Color.
+                // Red pixels (High R but Low G) are forced to Black.
+                if (r > 100 && g > 80) { 
                     const lum = (r + g) / 510;
                     data[i] = colors.eye.r * lum;
                     data[i+1] = colors.eye.g * lum;
                     data[i+2] = colors.eye.b * lum;
-                    data[i+3] = 255;
                 } else {
                     data[i] = 0; data[i+1] = 0; data[i+2] = 0;
-                    data[i+3] = 255; // Keep alpha solid so we don't see through the model
                 }
+                data[i+3] = 255;
             } else {
                 const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
                 if (lum < 0.05) continue; 
@@ -242,8 +245,8 @@
         }
     }
 
+    // SYNC FUNCTION: Forces all layers to copy the main model's perspective perfectly
     function sync() {
-        // We sync the camera orbit AND field of view to lock layers together
         const orbit = main.getCameraOrbit();
         const fov = main.getFieldOfView();
         const target = main.getCameraTarget();
@@ -251,7 +254,6 @@
         const layers = [...Object.values(parts), eyeViewer];
         layers.forEach(v => {
             if(v.getAttribute('src')) {
-                // Force layers to share the exact same 3D viewpoint
                 v.cameraOrbit = `${orbit.theta}rad ${orbit.phi}rad ${orbit.radius}m`;
                 v.fieldOfView = `${fov}deg`;
                 v.cameraTarget = `${target.x}m ${target.y}m ${target.z}m`;
@@ -268,7 +270,11 @@
     function changePattern(file) { currentPattern = file; updateAll(); }
     function hslToRgb(h, s, l) { const f = (n, k = (n + h / 30) % 12) => l - s * Math.min(l, 1 - l) * Math.max(Math.min(k - 3, 9 - k, 1), -1); return { r: Math.round(f(0) * 255), g: Math.round(f(8) * 255), b: Math.round(f(4) * 255) }; }
     
-    window.onload = () => { changePart('crest', 'bestial.glb'); changePart('wings', 'manticore.glb'); changePart('tail', 'fanned.glb'); };
+    window.onload = () => { 
+        changePart('crest', 'bestial.glb'); 
+        changePart('wings', 'manticore.glb'); 
+        changePart('tail', 'fanned.glb'); 
+    };
     main.addEventListener('model-visibility', updateAll);
 </script>
 </body>
