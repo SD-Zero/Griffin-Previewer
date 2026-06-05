@@ -3,67 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Griffin Character Creator</title>
+    <title>Griffin Creator Pro</title>
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; background: #1a1a1a; color: white; font-family: sans-serif; display: flex; height: 100vh; overflow: hidden; }
+        body { margin: 0; background: #111; color: white; font-family: sans-serif; display: flex; height: 100vh; overflow: hidden; }
         .viewer-container { flex: 1; position: relative; background: radial-gradient(#333, #000); }
-        model-viewer { width: 100%; height: 100%; position: absolute; top: 0; left: 0; background-color: transparent; }
+        model-viewer { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
         #crest-v, #wings-v, #tail-v { z-index: 2; pointer-events: none; visibility: hidden; }
         .sidebar { width: 320px; background: #222; border-left: 2px solid #ff9d00; display: flex; flex-direction: column; overflow-y: auto; padding: 10px; }
-        h2 { font-size: 16px; color: #ff9d00; text-align: center; margin: 10px 0; border-bottom: 1px solid #444; padding-bottom: 10px; }
+        h2 { font-size: 14px; color: #ff9d00; text-align: center; letter-spacing: 2px; margin: 10px 0; border-bottom: 1px solid #444; padding-bottom: 10px; }
         details { margin-bottom: 5px; background: #2d2d2d; border-radius: 4px; }
-        summary { padding: 12px; font-weight: bold; cursor: pointer; background: #333; display: flex; justify-content: space-between; list-style: none; }
+        summary { padding: 12px; font-weight: bold; cursor: pointer; background: #333; display: flex; justify-content: space-between; font-size: 13px; }
         .button-stack { display: flex; flex-direction: column; padding: 10px; gap: 5px; }
-        button.part-btn { background: #444; color: white; border: 1px solid #555; padding: 10px; text-align: left; border-radius: 4px; cursor: pointer; }
-        .palette-group { background: #1a1a1a; padding: 5px; border-top: 1px solid #444; }
+        button.part-btn { background: #444; color: #ddd; border: 1px solid #555; padding: 10px; text-align: left; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        button.part-btn:hover { background: #555; border-color: #ff9d00; }
+        .palette-group { background: #1a1a1a; padding: 5px; border-top: 1px solid #333; }
         .color-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 10px; }
-        .swatch { width: 100%; aspect-ratio: 1; border-radius: 3px; cursor: pointer; border: 1px solid #444; }
+        .swatch { width: 100%; aspect-ratio: 1; border-radius: 3px; cursor: pointer; border: 1px solid #444; transition: transform 0.1s; }
+        .swatch:hover { transform: scale(1.1); border-color: white; }
     </style>
 </head>
 <body>
 
 <div class="viewer-container">
-    <model-viewer id="griffin" src="griffin.glb" camera-controls auto-rotate interaction-prompt="none" shadow-intensity="1" exposure="1.2"></model-viewer>
+    <model-viewer id="griffin" src="griffin.glb" camera-controls auto-rotate interaction-prompt="none" shadow-intensity="1" exposure="1.2" environment-image="neutral"></model-viewer>
     <model-viewer id="crest-v" src="" interaction-prompt="none"></model-viewer>
     <model-viewer id="wings-v" src="" interaction-prompt="none"></model-viewer>
     <model-viewer id="tail-v" src="" interaction-prompt="none"></model-viewer>
 </div>
 
 <div class="sidebar">
-    <h2>GRIFFIN EDITOR</h2>
-    <details open><summary>Patterns</summary><div class="button-stack">
-        <button class="part-btn" onclick="changePattern('Griffin_Pattern00_HQ.png')">Drifter</button>
-        <button class="part-btn" onclick="changePattern('Griffin_Pattern02_HQ.png')">Duochrome</button>
-        <button class="part-btn" onclick="changePattern('Griffin_Pattern01_HQ.png')">Shining</button>
-        <button class="part-btn" onclick="changePattern('Griffin_Pattern03_HQ.png')">Stealthy</button>
-        <button class="part-btn" onclick="changePattern('Griffin_Pattern04_HQ.png')">Harfang</button>
+    <h2>GRIFFIN SYSTEM</h2>
+    
+    <details open><summary>PATTERNS</summary><div class="button-stack">
+        <button class="part-btn" onclick="changePattern('Griffin_Pattern00_HQ.png')">DRIFTER</button>
+        <button class="part-btn" onclick="changePattern('Griffin_Pattern02_HQ.png')">DUOCHROME</button>
+        <button class="part-btn" onclick="changePattern('Griffin_Pattern01_HQ.png')">SHINING</button>
+        <button class="part-btn" onclick="changePattern('Griffin_Pattern03_HQ.png')">STEALTHY</button>
+        <button class="part-btn" onclick="changePattern('Griffin_Pattern04_HQ.png')">HARFANG</button>
     </div></details>
-    <details><summary>Crests</summary><div class="button-stack">
-        <button class="part-btn" onclick="changePart('crest', 'bestial.glb')">Bestial</button>
-        <button class="part-btn" onclick="changePart('crest', 'pinnacle.glb')">Pinnacle</button>
-        <button class="part-btn" onclick="changePart('crest', 'windswept.glb')">Windswept</button>
-        <button class="part-btn" onclick="changePart('crest', 'harpy.glb')">Harpy</button>
-        <button class="part-btn" onclick="changePart('crest', '')">None</button>
+
+    <details><summary>CRESTS</summary><div class="button-stack">
+        <button class="part-btn" onclick="changePart('crest', 'bestial.glb')">BESTIAL</button>
+        <button class="part-btn" onclick="changePart('crest', 'pinnacle.glb')">PINNACLE</button>
+        <button class="part-btn" onclick="changePart('crest', 'windswept.glb')">WINDSWEPT</button>
+        <button class="part-btn" onclick="changePart('crest', 'harpy.glb')">HARPY</button>
+        <button class="part-btn" onclick="changePart('crest', '')">NONE</button>
     </div></details>
-    <details><summary>Wings</summary><div class="button-stack">
-        <button class="part-btn" onclick="changePart('wings', 'heroic.glb')">Heroic</button>
-        <button class="part-btn" onclick="changePart('wings', 'osprey.glb')">Osprey</button>
-        <button class="part-btn" onclick="changePart('wings', 'manticore.glb')">Manticore</button>
-        <button class="part-btn" onclick="changePart('wings', 'scarab.glb')">Scarab</button>
-        <button class="part-btn" onclick="changePart('wings', 'seraph.glb')">Seraph</button>
-        <button class="part-btn" onclick="changePart('wings', '')">None</button>
+
+    <details><summary>WINGS</summary><div class="button-stack">
+        <button class="part-btn" onclick="changePart('wings', 'heroic.glb')">HEROIC</button>
+        <button class="part-btn" onclick="changePart('wings', 'osprey.glb')">OSPREY</button>
+        <button class="part-btn" onclick="changePart('wings', 'manticore.glb')">MANTICORE</button>
+        <button class="part-btn" onclick="changePart('wings', 'scarab.glb')">SCARAB</button>
+        <button class="part-btn" onclick="changePart('wings', 'seraph.glb')">SERAPH</button>
+        <button class="part-btn" onclick="changePart('wings', '')">NONE</button>
     </div></details>
-    <details><summary>Tails</summary><div class="button-stack">
-        <button class="part-btn" onclick="changePart('tail', 'fanned.glb')">Fanned</button>
-        <button class="part-btn" onclick="changePart('tail', 'svelte.glb')">Svelte</button>
-        <button class="part-btn" onclick="changePart('tail', 'tufted.glb')">Tufted</button>
-        <button class="part-btn" onclick="changePart('tail', 'scorpio.glb')">Scorpio</button>
-        <button class="part-btn" onclick="changePart('tail', '')">None</button>
+
+    <details><summary>TAILS</summary><div class="button-stack">
+        <button class="part-btn" onclick="changePart('tail', 'fanned.glb')">FANNED</button>
+        <button class="part-btn" onclick="changePart('tail', 'svelte.glb')">SVELTE</button>
+        <button class="part-btn" onclick="changePart('tail', 'tufted.glb')">TUFTED</button>
+        <button class="part-btn" onclick="changePart('tail', 'scorpio.glb')">SCORPIO</button>
+        <button class="part-btn" onclick="changePart('tail', '')">NONE</button>
     </div></details>
-    <details><summary>Primary Color</summary><div id="primary-container"></div></details>
-    <details><summary>Secondary Color</summary><div id="secondary-container"></div></details>
-    <details><summary>Tertiary Color</summary><div id="tertiary-container"></div></details>
+
+    <details><summary>PRIMARY COLOR</summary><div id="primary-container"></div></details>
+    <details><summary>SECONDARY COLOR</summary><div id="secondary-container"></div></details>
+    <details><summary>TERTIARY COLOR</summary><div id="tertiary-container"></div></details>
 </div>
 
 <script>
@@ -84,23 +91,28 @@
 
     const main = document.querySelector('#griffin');
     const parts = { crest: document.querySelector('#crest-v'), wings: document.querySelector('#wings-v'), tail: document.querySelector('#tail-v') };
-    let colors = { primary: {r:255, g:255, b:255}, secondary: {r:255, g:255, b:255}, tertiary: {r:255, g:255, b:255} };
+    let colors = { 
+        primary: {r:255, g:255, b:255}, 
+        secondary: {r:255, g:255, b:255}, 
+        tertiary: {r:255, g:255, b:255} 
+    };
     let currentPattern = 'Griffin_Pattern00_HQ.png';
 
+    // Color UI Generation
     ["primary", "secondary", "tertiary"].forEach(type => {
         const container = document.getElementById(`${type}-container`);
         paletteData.forEach(p => {
             const det = document.createElement('details');
             det.className = "palette-group";
-            det.innerHTML = `<summary style="font-size:12px;">${p.name}</summary><div class="color-grid"></div>`;
+            det.innerHTML = `<summary style="font-size:11px; color:#aaa;">${p.name}</summary><div class="color-grid"></div>`;
             container.appendChild(det);
             const grid = det.querySelector('.color-grid');
             for(let i=0; i<p.count; i++) {
                 const s = document.createElement('div');
                 s.className = "swatch";
                 const h = (i * 360) / p.count;
-                s.style.background = `hsl(${h}, 70%, 60%)`;
-                s.onclick = () => { colors[type] = hslToRgb(h, 0.7, 0.6); updateAllMaterials(); };
+                s.style.background = `hsl(${h}, 70%, 55%)`;
+                s.onclick = () => { colors[type] = hslToRgb(h, 0.7, 0.55); updateAll(); };
                 grid.appendChild(s);
             }
         });
@@ -120,36 +132,49 @@
 
         for (let i = 0; i < data.length; i += 4) {
             const r = data[i], g = data[i+1], b = data[i+2];
-            // Protection: Skip pixels that are very dark (prevents "solid color" beak issues)
-            if (r < 30 && g < 30 && b < 30) continue;
+            
+            // 1. BEAK PROTECTION: If it's a dark shaded pixel, leave it alone entirely.
+            const brightness = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            if (brightness < 0.15) continue; 
 
-            let targetColor = null;
-            let ref = 1.0;
+            let target = null;
+            let refB = 1.0;
 
-            if (r > 130 && g < 110 && b < 110) { targetColor = colors.primary; ref = 0.5; } 
-            else if (r > 140 && g > 140 && b < 110) { targetColor = colors.secondary; ref = 0.9; } 
-            else if (b > 120 || (r > 130 && b > 130) || (g > 130 && r < 110)) { targetColor = colors.tertiary; ref = 0.6; }
+            // 2. HARD CHANNEL SEPARATION
+            // Primary = Pure Red (High R, Low G/B)
+            if (r > 100 && g < 80 && b < 80) { 
+                target = colors.primary; 
+                refB = r / 255; 
+            }
+            // Secondary = Pure Yellow (High R, High G, Low B)
+            else if (r > 100 && g > 100 && b < 80) { 
+                target = colors.secondary; 
+                refB = (r + g) / 510; 
+            }
+            // Tertiary = Blue, Hot Pink, or Green (Isolated channels)
+            else if (b > 100 || (r > 100 && b > 100) || (g > 100 && r < 80)) { 
+                target = colors.tertiary; 
+                refB = Math.max(r,g,b) / 255;
+            }
 
-            if (targetColor) {
-                const brightness = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-                // Balanced Normalization
-                const factor = brightness / ref;
-                data[i] = targetColor.r * factor;
-                data[i+1] = targetColor.g * factor;
-                data[i+2] = targetColor.b * factor;
+            if (target) {
+                // Apply color but use the pixel's relative intensity to keep fur texture/shading
+                data[i] = target.r * refB;
+                data[i+1] = target.g * refB;
+                data[i+2] = target.b * refB;
             }
         }
         ctx.putImageData(imageData, 0, 0);
         return canvas.toDataURL();
     }
 
-    async function updateAllMaterials() {
-        const bodyTex = await processTexture(currentPattern);
+    async function updateAll() {
+        const bodyBake = await processTexture(currentPattern);
         if (main.model) {
             for (const mat of main.model.materials) {
                 const n = mat.name.toLowerCase();
                 if (!n.includes("wing") && !n.includes("tail") && !n.includes("crest")) {
-                    const tex = await main.createTexture(bodyTex);
+                    const tex = await main.createTexture(bodyBake);
                     if (mat.pbrMetallicRoughness.baseColorTexture) mat.pbrMetallicRoughness.baseColorTexture.setTexture(tex);
                 } else {
                     mat.setAlphaMode("BLEND");
@@ -159,11 +184,11 @@
         }
         for (const [key, v] of Object.entries(parts)) {
             if (v.getAttribute('src') && v.model) {
-                const rawTex = (key === 'wings') ? 'Griffin_Wings.png' : 'Griffin_Tails_Crests.png';
-                const bakedTex = await processTexture(rawTex);
+                const raw = (key === 'wings') ? 'Griffin_Wings.png' : 'Griffin_Tails_Crests.png';
+                const bake = await processTexture(raw);
                 for (const mat of v.model.materials) {
                     if (mat.name.toLowerCase().includes(key.substring(0,3))) {
-                        const tex = await v.createTexture(bakedTex);
+                        const tex = await v.createTexture(bake);
                         if (mat.pbrMetallicRoughness.baseColorTexture) mat.pbrMetallicRoughness.baseColorTexture.setTexture(tex);
                     } else {
                         mat.setAlphaMode("BLEND");
@@ -200,12 +225,12 @@
         const v = parts[type]; v.style.visibility = "hidden";
         if (!file) { v.removeAttribute('src'); return; }
         v.setAttribute('src', file);
-        v.addEventListener('model-visibility', () => updateAllMaterials(), { once: true });
+        v.addEventListener('model-visibility', () => updateAll(), { once: true });
     }
 
-    function changePattern(file) { currentPattern = file; updateAllMaterials(); }
+    function changePattern(file) { currentPattern = file; updateAll(); }
     window.onload = () => { changePart('crest', 'bestial.glb'); changePart('wings', 'manticore.glb'); changePart('tail', 'fanned.glb'); };
-    main.addEventListener('model-visibility', updateAllMaterials);
+    main.addEventListener('model-visibility', updateAll);
 </script>
 </body>
 </html>
