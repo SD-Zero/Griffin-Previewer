@@ -10,6 +10,8 @@
         .viewer-container { flex: 1; position: relative; background: radial-gradient(#333, #000); }
         model-viewer { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
         #crest-v, #wings-v, #tail-v { z-index: 2; pointer-events: none; visibility: hidden; }
+        #eyes-v { z-index: 3; pointer-events: none; visibility: visible; }
+        
         .sidebar { width: 320px; background: #222; border-left: 2px solid #ff9d00; display: flex; flex-direction: column; overflow-y: auto; padding: 10px; }
         h2 { font-size: 14px; color: #ff9d00; text-align: center; letter-spacing: 2px; margin: 10px 0; border-bottom: 1px solid #444; padding-bottom: 10px; }
         details { margin-bottom: 5px; background: #2d2d2d; border-radius: 4px; }
@@ -17,6 +19,7 @@
         .button-stack { display: flex; flex-direction: column; padding: 10px; gap: 5px; }
         button.part-btn { background: #444; color: #ddd; border: 1px solid #555; padding: 10px; text-align: left; border-radius: 4px; cursor: pointer; font-size: 12px; }
         button.part-btn:hover { background: #555; border-color: #ff9d00; }
+        select.part-select { background: #444; color: white; border: 1px solid #555; padding: 10px; border-radius: 4px; cursor: pointer; font-size: 12px; width: 100%; }
         .palette-group { background: #1a1a1a; padding: 5px; border-top: 1px solid #333; }
         .color-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 10px; }
         .swatch { width: 100%; aspect-ratio: 1; border-radius: 3px; cursor: pointer; border: 1px solid #444; transition: transform 0.1s; }
@@ -30,6 +33,7 @@
     <model-viewer id="crest-v" src="" interaction-prompt="none"></model-viewer>
     <model-viewer id="wings-v" src="" interaction-prompt="none"></model-viewer>
     <model-viewer id="tail-v" src="" interaction-prompt="none"></model-viewer>
+    <model-viewer id="eyes-v" src="Griffin_LQ_Eyes_Mesh.glb" interaction-prompt="none"></model-viewer>
 </div>
 
 <div class="sidebar">
@@ -41,6 +45,26 @@
         <button class="part-btn" onclick="changePattern('Griffin_Pattern01_HQ.png')">SHINING</button>
         <button class="part-btn" onclick="changePattern('Griffin_Pattern03_HQ.png')">STEALTHY</button>
         <button class="part-btn" onclick="changePattern('Griffin_Pattern04_HQ.png')">HARFANG</button>
+    </div></details>
+
+    <details open><summary>EYES</summary><div class="button-stack">
+        <button class="part-btn" onclick="changeEyeModel('Griffin_LQ_Eyes_Mesh.glb')">Standard Eyes</button>
+        <button class="part-btn" onclick="changeEyeModel('Griffin_LQ_Eyelash_Mesh.glb')">Eyelash Eyes</button>
+        <hr style="border:0; border-top:1px solid #444; margin:5px 0;">
+        <select class="part-select" onchange="changeEyeShape(this.value)">
+            <option value="Eye00_Texture.png">Ordinary</option>
+            <option value="Eye01_Texture.png">Surprised</option>
+            <option value="Eye02_Texture.png">Cute</option>
+            <option value="Eye03_Texture.png">Creepy</option>
+            <option value="Eye04_Texture.png">Spooky</option>
+            <option value="Eye05_Texture.png">Swirly</option>
+            <option value="Eye06_Texture.png">Blank</option>
+            <option value="Eye07_Texture.png">Crossed Out</option>
+            <option value="Eye08_Texture.png">Starry</option>
+            <option value="Eye09_Texture.png">Lovely</option>
+            <option value="Eye10_Texture.png">Suspicious</option>
+            <option value="Eye11_Texture.png">Striking</option>
+        </select>
     </div></details>
 
     <details><summary>CRESTS</summary><div class="button-stack">
@@ -71,6 +95,7 @@
     <details><summary>PRIMARY COLOR</summary><div id="primary-container"></div></details>
     <details><summary>SECONDARY COLOR</summary><div id="secondary-container"></div></details>
     <details><summary>TERTIARY COLOR</summary><div id="tertiary-container"></div></details>
+    <details><summary>EYE COLOR</summary><div id="eye-container"></div></details>
 </div>
 
 <script>
@@ -90,11 +115,18 @@
     ];
 
     const main = document.querySelector('#griffin');
+    const eyeViewer = document.querySelector('#eyes-v');
     const parts = { crest: document.querySelector('#crest-v'), wings: document.querySelector('#wings-v'), tail: document.querySelector('#tail-v') };
-    let colors = { primary: {r:255, g:255, b:255}, secondary: {r:255, g:255, b:255}, tertiary: {r:255, g:255, b:255} };
+    let colors = { 
+        primary: {r:255, g:255, b:255}, 
+        secondary: {r:255, g:255, b:255}, 
+        tertiary: {r:255, g:255, b:255},
+        eye: {r:255, g:255, b:255} 
+    };
     let currentPattern = 'Griffin_Pattern00_HQ.png';
+    let currentEyeShape = 'Eye00_Texture.png';
 
-    ["primary", "secondary", "tertiary"].forEach(type => {
+    ["primary", "secondary", "tertiary", "eye"].forEach(type => {
         const container = document.getElementById(`${type}-container`);
         paletteData.forEach(p => {
             const det = document.createElement('details');
@@ -113,7 +145,7 @@
         });
     });
 
-    async function processTexture(imgSrc) {
+    async function processTexture(imgSrc, isEye = false) {
         const img = new Image();
         img.crossOrigin = "anonymous";
         img.src = imgSrc;
@@ -128,34 +160,37 @@
         for (let i = 0; i < data.length; i += 4) {
             const r = data[i], g = data[i+1], b = data[i+2];
             const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-            if (luminance < 0.05) continue; 
+            
+            if (isEye) {
+                // EYE COLORING: Applies the Eye Color as a tint to the eye texture
+                data[i] = colors.eye.r * luminance;
+                data[i+1] = colors.eye.g * luminance;
+                data[i+2] = colors.eye.b * luminance;
+            } else {
+                // BODY COLORING (Existing perfected logic)
+                if (luminance < 0.05) continue; 
+                let target = null;
+                let intensity = 1.0;
 
-            let target = null;
-            let intensity = 1.0;
+                if (r > 60 && r > g * 1.3 && r > b * 1.3) {
+                    target = colors.primary;
+                    intensity = Math.pow(r / 255, 0.85) * 1.05;
+                }
+                else if (r > 100 && g > 100 && b < 140) {
+                    target = colors.secondary;
+                    intensity = luminance / 0.9;
+                }
+                else if (b > 50 || (r > 100 && b > 100) || (g > 100 && r < 120)) {
+                    target = colors.tertiary;
+                    intensity = Math.pow(Math.max(r, g, b) / 255, 0.75) * 0.95;
+                }
 
-            // PRIMARY (RED) - Adjusted for slight darkening
-            if (r > 60 && r > g * 1.3 && r > b * 1.3) {
-                target = colors.primary;
-                intensity = r / 255;
-                intensity = Math.pow(intensity, 0.85) * 1.05; // Tightened curve for depth
-            }
-            // SECONDARY (YELLOW) - Left alone as per feedback
-            else if (r > 100 && g > 100 && b < 140) {
-                target = colors.secondary;
-                intensity = luminance / 0.9;
-            }
-            // TERTIARY (BLUE/PINK/GREEN) - Adjusted for slight darkening
-            else if (b > 50 || (r > 100 && b > 100) || (g > 100 && r < 120)) {
-                target = colors.tertiary;
-                intensity = Math.max(r, g, b) / 255;
-                intensity = Math.pow(intensity, 0.75) * 0.95; // Lowered multiplier for "slight" darkening
-            }
-
-            if (target) {
-                const finalFactor = Math.min(intensity, 1.1);
-                data[i] = target.r * finalFactor;
-                data[i+1] = target.g * finalFactor;
-                data[i+2] = target.b * finalFactor;
+                if (target) {
+                    const factor = Math.min(intensity, 1.1);
+                    data[i] = target.r * factor;
+                    data[i+1] = target.g * factor;
+                    data[i+2] = target.b * factor;
+                }
             }
         }
         ctx.putImageData(imageData, 0, 0);
@@ -163,6 +198,7 @@
     }
 
     async function updateAll() {
+        // Body Update
         const bodyBake = await processTexture(currentPattern);
         if (main.model) {
             for (const mat of main.model.materials) {
@@ -176,6 +212,8 @@
                 }
             }
         }
+        
+        // Parts Update
         for (const [key, v] of Object.entries(parts)) {
             if (v.getAttribute('src') && v.model) {
                 const raw = (key === 'wings') ? 'Griffin_Wings.png' : 'Griffin_Tails_Crests.png';
@@ -192,6 +230,25 @@
                 v.style.visibility = "visible";
             }
         }
+
+        // Eye Update
+        const eyeBake = await processTexture(currentEyeShape, true);
+        if (eyeViewer.model) {
+            for (const mat of eyeViewer.model.materials) {
+                const tex = await eyeViewer.createTexture(eyeBake);
+                if (mat.pbrMetallicRoughness.baseColorTexture) mat.pbrMetallicRoughness.baseColorTexture.setTexture(tex);
+            }
+        }
+    }
+
+    function changeEyeModel(file) {
+        eyeViewer.setAttribute('src', file);
+        eyeViewer.addEventListener('model-visibility', () => updateAll(), { once: true });
+    }
+
+    function changeEyeShape(file) {
+        currentEyeShape = file;
+        updateAll();
     }
 
     function hslToRgb(h, s, l) {
@@ -203,7 +260,8 @@
         const orbit = main.getCameraOrbit();
         const fov = main.getFieldOfView();
         const target = main.getCameraTarget();
-        Object.values(parts).forEach(v => {
+        const viewers = [...Object.values(parts), eyeViewer];
+        viewers.forEach(v => {
             if(v.getAttribute('src')) {
                 v.cameraOrbit = `${orbit.theta}rad ${orbit.phi}rad ${orbit.radius}m`;
                 v.fieldOfView = `${fov}deg`;
@@ -223,7 +281,12 @@
     }
 
     function changePattern(file) { currentPattern = file; updateAll(); }
-    window.onload = () => { changePart('crest', 'bestial.glb'); changePart('wings', 'manticore.glb'); changePart('tail', 'fanned.glb'); };
+    
+    window.onload = () => { 
+        changePart('crest', 'bestial.glb'); 
+        changePart('wings', 'manticore.glb'); 
+        changePart('tail', 'fanned.glb'); 
+    };
     main.addEventListener('model-visibility', updateAll);
 </script>
 </body>
