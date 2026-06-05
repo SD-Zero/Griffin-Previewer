@@ -3,77 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Griffin Previewer</title>
+    <title>Griffin Debugger</title>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.3.1/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; background: #1a1a1a; color: white; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        header { padding: 10px; text-align: center; background: #222; border-bottom: 2px solid #ff9d00; }
-        .viewer-container { flex: 1; position: relative; background: radial-gradient(#333, #000); }
-        model-viewer { width: 100%; height: 100%; }
-        .ui-panel { padding: 15px; background: #222; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; overflow-y: auto; }
-        .group { border: 1px solid #444; padding: 10px; border-radius: 10px; background: #2d2d2d; }
-        h4 { margin: 0 0 10px 0; font-size: 14px; color: #ff9d00; }
-        button { background: #444; color: white; border: 1px solid #666; padding: 10px; cursor: pointer; border-radius: 5px; margin: 2px; }
-        button:hover { background: #ff9d00; color: black; }
+        body { margin: 0; background: #111; color: white; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; }
+        header { padding: 10px; background: #222; text-align: center; border-bottom: 2px solid #ff9d00; }
+        .viewer-container { flex: 1; position: relative; background: #333; }
+        model-viewer { width: 100%; height: 100%; --poster-color: transparent; }
+        
+        /* Error Message Styles */
+        #error-log {
+            position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.8);
+            color: #ff4444; padding: 10px; font-size: 10px; border-radius: 5px; pointer-events: none;
+        }
+        .ui-panel { padding: 15px; background: #222; display: flex; gap: 10px; justify-content: center; }
+        button { background: #444; color: white; border: none; padding: 10px; border-radius: 5px; }
     </style>
 </head>
 <body>
 
-<header>
-    <h2 style="margin:0;">Griffin 3D Previewer</h2>
-</header>
+<header><h2>Griffin Status: Checking...</h2></header>
 
 <div class="viewer-container">
+    <div id="error-log">Logs: Waiting for engine...</div>
+    
     <model-viewer id="griffin" 
         src="Griffin_LQ_Body_Mesh.glb" 
         camera-controls 
         auto-rotate 
-        shadow-intensity="1" 
-        environment-image="neutral"
-        exposure="1"
         bounds="tight"
-        camera-orbit="auto auto auto">
+        exposure="1.5"
+        shadow-intensity="1"
+        ar-status="not-presenting">
         
+        <div slot="poster" style="display:flex; justify-content:center; align-items:center; height:100%;">
+            <p>Attempting to load Griffin_LQ_Body_Mesh.glb...</p>
+        </div>
+
         <model-viewer id="crest-layer" 
             src="Crest_1.glb" 
-            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"
-            bounds="tight">
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;">
         </model-viewer>
     </model-viewer>
 </div>
 
 <div class="ui-panel">
-    <div class="group">
-        <h4>Patterns</h4>
-        <button onclick="changePattern('Griffin_Pattern00_HQ.png')">00</button>
-        <button onclick="changePattern('Griffin_Pattern01_HQ.png')">01</button>
-        <button onclick="changePattern('Griffin_Pattern02_HQ.png')">02</button>
-        <button onclick="changePattern('Griffin_Pattern03_HQ.png')">03</button>
-        <button onclick="changePattern('Griffin_Pattern04_HQ.png')">04</button>
-    </div>
-
-    <div class="group">
-        <h4>Crest</h4>
-        <button onclick="toggleCrest(true)">Show</button>
-        <button onclick="toggleCrest(false)">None</button>
-    </div>
+    <button onclick="location.reload()">Force Reload Site</button>
+    <button onclick="changePattern('Griffin_Pattern00_HQ.png')">Test Pattern 00</button>
 </div>
 
 <script>
-    const griffinModel = document.querySelector('#griffin');
-    const crestModel = document.querySelector('#crest-layer');
+    const viewer = document.querySelector('#griffin');
+    const log = document.querySelector('#error-log');
+
+    // Diagnostic Logs
+    viewer.addEventListener('error', (event) => {
+        log.innerHTML = "❌ ERROR: Could not find or load the .glb file. Check names!";
+        console.error(event);
+    });
+
+    viewer.addEventListener('load', () => {
+        log.innerHTML = "✅ SUCCESS: Griffin Base Loaded!";
+        document.querySelector('h2').innerText = "Griffin: LOADED";
+    });
 
     async function changePattern(fileName) {
-        if (!griffinModel.model) return;
-        const material = griffinModel.model.materials[0];
-        const texture = await griffinModel.createTexture(fileName);
-        if (material.pbrMetallicRoughness && material.pbrMetallicRoughness.baseColorTexture) {
-            material.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
-        }
-    }
-
-    function toggleCrest(isVisible) {
-        crestModel.style.display = isVisible ? "block" : "none";
+        if (!viewer.model) { alert("Model not loaded yet!"); return; }
+        const material = viewer.model.materials[0];
+        const texture = await viewer.createTexture(fileName);
+        material.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
+        log.innerHTML = "🎨 Pattern swapped to: " + fileName;
     }
 </script>
 
