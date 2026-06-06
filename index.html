@@ -38,9 +38,13 @@
         
         .sidebar { width: 320px; background: #000; border-left: 2px solid #00d4ff; display: flex; flex-direction: column; overflow-y: auto; padding: 10px; transition: all 0.3s ease; box-shadow: -5px 0 20px rgba(0, 212, 255, 0.2); }
         
-        .random-box { display: grid; grid-template-columns: 1fr; gap: 5px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #222; }
+        .random-box { display: grid; grid-template-columns: 1fr; gap: 5px; margin-bottom: 15px; padding-bottom: 10px; }
         .rnd-btn { background: #00d4ff; color: #000; border: none; padding: 10px; font-weight: bold; font-size: 10px; cursor: pointer; border-radius: 4px; text-transform: uppercase; transition: 0.3s; }
         .rnd-btn:hover { background: #fff; box-shadow: 0 0 10px #00d4ff; }
+
+        /* --- SECTION STYLING --- */
+        .section-label { font-size: 11px; letter-spacing: 2px; color: #fff; margin-top: 15px; margin-bottom: 5px; padding-left: 5px; }
+        .section-divider { border: 0; border-top: 1px solid #333; margin-bottom: 10px; width: 100%; }
 
         details { margin-bottom: 5px; background: #111; border-radius: 4px; border: 1px solid #222; }
         summary { padding: 12px; font-weight: bold; cursor: pointer; background: #111; display: flex; justify-content: space-between; font-size: 13px; list-style: none; color: #00d4ff; }
@@ -96,28 +100,8 @@
         </div>
     </div>
 
-    <details open>
-        <summary>EYE SHAPES</summary>
-        <div class="button-stack">
-            <button class="part-btn" onclick="togglePart('eye', 'Mesh_Eyes_Normal')">Standard Eyes</button>
-            <button class="part-btn" onclick="togglePart('eye', 'Mesh_Eyes_Lashes')">Eyelash Eyes</button>
-            <hr style="border:0; border-top:1px solid #333; margin:5px 0;">
-            <select id="eyeShapeSelect" class="part-select" onchange="changeEyeShape(this.value)">
-                <option value="Eye00_Texture.png">Ordinary</option>
-                <option value="Eye01_Texture.png">Surprised</option>
-                <option value="Eye02_Texture.png">Cute</option>
-                <option value="Eye03_Texture.png">Creepy</option>
-                <option value="Eye04_Texture.png">Spooky</option>
-                <option value="Eye05_Texture.png">Swirly</option>
-                <option value="Eye06_Texture.png">Blank</option>
-                <option value="Eye07_Texture.png">Crossed Out</option>
-                <option value="Eye08_Texture.png">Starry</option>
-                <option value="Eye09_Texture.png">Lovely</option>
-                <option value="Eye10_Texture.png">Suspicious</option>
-                <option value="Eye11_Texture.png">Striking</option>
-            </select>
-        </div>
-    </details>
+    <div class="section-label">TRAITS</div>
+    <hr class="section-divider">
 
     <details><summary>CRESTS</summary><div class="button-stack">
         <button class="part-btn" onclick="togglePart('crest', 'bestial')">BESTIAL</button>
@@ -144,6 +128,29 @@
         <button class="part-btn" onclick="togglePart('tail', 'quetzal')">QUETZAL</button>
     </div></details>
 
+    <details open>
+        <summary>EYE SHAPES</summary>
+        <div class="button-stack">
+            <button class="part-btn" onclick="togglePart('eye', 'Mesh_Eyes_Normal')">Standard Eyes</button>
+            <button class="part-btn" onclick="togglePart('eye', 'Mesh_Eyes_Lashes')">Eyelash Eyes</button>
+            <hr style="border:0; border-top:1px solid #333; margin:5px 0;">
+            <select id="eyeShapeSelect" class="part-select" onchange="changeEyeShape(this.value)">
+                <option value="Eye00_Texture.png">Ordinary</option>
+                <option value="Eye01_Texture.png">Surprised</option>
+                <option value="Eye02_Texture.png">Cute</option>
+                <option value="Eye03_Texture.png">Creepy</option>
+                <option value="Eye04_Texture.png">Spooky</option>
+                <option value="Eye05_Texture.png">Swirly</option>
+                <option value="Eye06_Texture.png">Blank</option>
+                <option value="Eye07_Texture.png">Crossed Out</option>
+                <option value="Eye08_Texture.png">Starry</option>
+                <option value="Eye09_Texture.png">Lovely</option>
+                <option value="Eye10_Texture.png">Suspicious</option>
+                <option value="Eye11_Texture.png">Striking</option>
+            </select>
+        </div>
+    </details>
+
     <details><summary>PATTERNS</summary><div class="button-stack">
         <button class="part-btn" onclick="changePattern('Griffin_Pattern00_HQ.png')">DRIFTER</button>
         <button class="part-btn" onclick="changePattern('Griffin_Pattern02_HQ.png')">DUOCHROME</button>
@@ -152,6 +159,16 @@
         <button class="part-btn" onclick="changePattern('Griffin_Pattern04_HQ.png')">HARFANG</button>
     </div></details>
 
+    <hr class="section-divider" style="margin-top:20px;">
+    <div class="section-label">COLORING</div>
+    <hr class="section-divider">
+
+    <details><summary>EYE COLOR</summary>
+        <div class="button-stack">
+            <select class="palette-select" onchange="switchPalette('eye', this.value)"></select>
+            <div id="eye-container"></div>
+        </div>
+    </details>
     <details><summary>PRIMARY COLOR</summary>
         <div class="button-stack">
             <select class="palette-select" onchange="switchPalette('primary', this.value)"></select>
@@ -170,12 +187,8 @@
             <div id="tertiary-container"></div>
         </div>
     </details>
-    <details><summary>EYE COLOR</summary>
-        <div class="button-stack">
-            <select class="palette-select" onchange="switchPalette('eye', this.value)"></select>
-            <div id="eye-container"></div>
-        </div>
-    </details>
+
+    <hr class="section-divider" style="margin-top:20px;">
 </div>
 
 <script>
