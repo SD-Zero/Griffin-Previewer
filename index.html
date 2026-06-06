@@ -8,8 +8,7 @@
     <style>
         body { margin: 0; background: #000; color: white; font-family: sans-serif; display: flex; height: 100vh; overflow: hidden; }
         
-        /* --- BRANDED INITIALIZING SCREEN --- */
-        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; transition: opacity 0.8s ease; overflow: hidden; }
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; transition: opacity 0.8s ease; pointer-events: none; }
         .logo-wrap { text-align: center; margin-bottom: 50px; position: relative; z-index: 2; }
         .sub-logo { font-size: 10px; letter-spacing: 3px; color: #00d4ff; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; display: block; opacity: 0.8; }
         .main-logo { font-size: 28px; letter-spacing: 6px; color: #fff; text-transform: uppercase; font-weight: 900; text-shadow: 0 0 20px rgba(0, 212, 255, 0.6); }
@@ -32,7 +31,6 @@
         @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.7; } 50% { transform: scale(1.08); opacity: 1; } }
         .loading-text { font-size: 11px; letter-spacing: 4px; color: #888; text-transform: uppercase; font-weight: 300; }
 
-        /* --- VIEWER & SIDEBAR --- */
         .viewer-container { flex: 1; position: relative; background: radial-gradient(#333, #000); }
         model-viewer { width: 100%; height: 100%; --poster-color: transparent; }
         
@@ -226,6 +224,14 @@
         });
     });
 
+    function removeLoader() {
+        const loader = document.getElementById('loading-overlay');
+        if (loader) {
+            loader.style.opacity = '0';
+            setTimeout(() => { if(loader) loader.remove(); }, 800);
+        }
+    }
+
     function randomizeAll() { randomizeTraits(); randomizeColors(); }
 
     function randomizeTraits() {
@@ -260,7 +266,6 @@
                         const factor = (r + g) / 510;
                         data[i] = colors.eye.r * factor; data[i+1] = colors.eye.g * factor; data[i+2] = colors.eye.b * factor;
                     } else { data[i] = 0; data[i+1] = 0; data[i+2] = 0; }
-                    data[i+3] = 255;
                 } else {
                     const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
                     if (lum < 0.03) continue;
@@ -273,19 +278,16 @@
             }
             offscreenCtx.putImageData(imageData, 0, 0);
             return offscreenCanvas.toDataURL();
-        } catch (e) {
-            console.warn("Texture load failed (CORS or 404):", imgSrc);
-            return null;
-        }
+        } catch (e) { return null; }
     }
 
     function togglePart(type, name) {
         activeParts[type] = name;
         if (!main.model) return;
-        const sceneSym = Object.getOwnPropertySymbols(main).find(x => x.description === "scene");
-        if (!sceneSym || !main[sceneSym]) return;
-        
-        main[sceneSym].traverse((obj) => {
+        const sceneSymbol = Object.getOwnPropertySymbols(main).find(s => s.description === 'scene');
+        const scene = main[sceneSymbol];
+        if (!scene) return;
+        scene.traverse((obj) => {
             if (obj.isMesh || obj.isGroup) {
                 const nodeName = obj.name.toLowerCase();
                 if (type === 'eye') {
@@ -300,26 +302,18 @@
     }
 
     async function updateAll() {
-        // SAFETY: Force loader away so you can see why it's broken
-        const loader = document.getElementById('loading-overlay');
-        if (loader) { loader.style.opacity = '0'; setTimeout(() => loader.remove(), 800); }
-
         if (!main.model) return;
-        
-        // Try bakes
         const b = await processTexture(currentPattern);
         const w = await processTexture('Griffin_Wings.png');
         const t = await processTexture('Griffin_Tails_Crests.png');
         const e = await processTexture(currentEyeShape, true);
-        
         const materialMap = { "Mat_GriffinBody": b, "Mat_Wings": w, "Mat_Tails_Crests": t, "Mat_Eyes": e };
         main.model.materials.forEach(mat => {
             const data = materialMap[mat.name];
             if (data) main.createTexture(data).then(tex => {
                 if(mat.pbrMetallicRoughness.baseColorTexture) mat.pbrMetallicRoughness.baseColorTexture.setTexture(tex);
-            }).catch(err => console.error("Texture Application Error:", err));
+            });
         });
-        
         Object.keys(activeParts).forEach(type => togglePart(type, activeParts[type]));
     }
 
@@ -360,7 +354,12 @@
         const f = (n, k = (n + h / 30) % 12) => l - s * Math.min(l, 1 - l) * Math.max(Math.min(k - 3, 9 - k, 1), -1);
         return { r: Math.round(f(0) * 255), g: Math.round(f(8) * 255), b: Math.round(f(4) * 255) };
     }
-    main.addEventListener('load', updateAll);
+    
+    // FINAL FIX: Independent loader removal
+    main.addEventListener('load', () => {
+        updateAll();
+        removeLoader();
+    });
 </script>
 </body>
 </html>
