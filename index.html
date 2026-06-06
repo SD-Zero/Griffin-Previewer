@@ -15,15 +15,17 @@
 
         body { margin: 0; background: #000; color: white; font-family: 'Georgia', serif; display: flex; height: 100vh; overflow: hidden; }
         
-        /* --- RESTORED BRANDED LOADING SCREEN --- */
+        /* --- RESTORED LOADING SCREEN --- */
         #loading-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; 
-            display: flex; flex-direction: column;
+            background: #000; display: flex; flex-direction: column;
             justify-content: center; align-items: center; z-index: 100;
-            transition: opacity 1s ease;
-            overflow: hidden;
+            transition: opacity 1s ease; overflow: hidden;
         }
+        .stars { position: absolute; width: 100%; height: 100%; background-image: radial-gradient(1px 1px at 25px 35px, #fff, rgba(0,0,0,0)), radial-gradient(1px 1px at 60px 120px, #fff, rgba(0,0,0,0)); background-size: 400px 400px; opacity: 0.3; }
+        .diamond-container { position: absolute; width: 100%; height: 100%; opacity: 0.05; pointer-events: none; }
+        .bg-diamond { position: absolute; background: var(--neon-green); clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); animation: pulse 8s infinite ease-in-out; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.1); opacity: 1; } }
 
         .logo-wrap { text-align: center; margin-bottom: 50px; position: relative; z-index: 2; }
         .sub-logo { font-size: 10px; letter-spacing: 3px; color: var(--neon-green); text-transform: uppercase; margin-bottom: 5px; display: block; opacity: 0.8; }
@@ -31,92 +33,53 @@
 
         .spinner-container { position: relative; width: 80px; height: 80px; margin-bottom: 25px; }
         .spin-diamond {
-            position: absolute; width: 10px; height: 16px;
-            background: var(--neon-green);
-            box-shadow: 0 0 12px var(--neon-green);
-            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
-            left: 35px; top: 0;
-            transform-origin: 5px 40px;
-            animation: diamond-spin 1.4s infinite linear;
+            position: absolute; width: 10px; height: 16px; background: var(--neon-green);
+            box-shadow: 0 0 12px var(--neon-green); clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+            left: 35px; top: 0; transform-origin: 5px 40px; animation: diamond-spin 1.4s infinite linear;
         }
-        .spin-diamond:nth-child(1) { animation-delay: 0s; }
-        .spin-diamond:nth-child(2) { animation-delay: -0.15s; }
-        .spin-diamond:nth-child(3) { animation-delay: -0.30s; }
-        .spin-diamond:nth-child(4) { animation-delay: -0.45s; }
-
         @keyframes diamond-spin { 0% { transform: rotate(0deg); opacity: 1; } 100% { transform: rotate(360deg); opacity: 0; } }
 
-        .stars { position: absolute; width: 100%; height: 100%; background-image: radial-gradient(1px 1px at 25px 35px, #fff, rgba(0,0,0,0)), radial-gradient(1px 1px at 60px 120px, #fff, rgba(0,0,0,0)); background-size: 400px 400px; opacity: 0.3; }
-        .diamond-container { position: absolute; width: 100%; height: 100%; opacity: 0.05; pointer-events: none; }
-        .bg-diamond { position: absolute; background: var(--neon-green); clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); animation: pulse 8s infinite ease-in-out; }
-
-        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.1); opacity: 1; } }
-
-        /* --- SIDEBAR & CONTENT --- */
+        /* --- SIDEBAR & UI --- */
         .viewer-container { flex: 1; position: relative; background: radial-gradient(#1a1a1a, #000); }
-        model-viewer { width: 100%; height: 100%; --poster-color: transparent; }
+        model-viewer { width: 100%; height: 100%; }
         
         .sidebar { 
-            width: 320px; background: #000; 
-            border-left: 6px solid;
+            width: 320px; background: #000; border-left: 6px solid;
             border-image: linear-gradient(to bottom, var(--neon-green), var(--deep-forest)) 1;
-            display: flex; flex-direction: column; 
-            overflow-y: auto; padding: 20px 15px;
-            z-index: 5;
+            display: flex; flex-direction: column; overflow-y: auto; padding: 20px 15px; z-index: 5;
         }
 
         .section-title { font-size: 11px; color: #fff; text-transform: uppercase; letter-spacing: 3px; margin: 15px 0 5px 0; text-align: center; }
         .divider { height: 1px; background: #222; margin: 10px 0; border: none; }
 
         .random-btn-full { 
-            background: #222; color: #fff; border: 1px solid #333; 
-            padding: 12px; font-size: 10px; cursor: pointer; border-radius: 50px; 
-            text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px;
+            background: #222; color: #fff; border: 1px solid #333; padding: 12px; font-size: 10px; 
+            cursor: pointer; border-radius: 50px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px;
         }
 
         .random-box { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; }
-        .rnd-btn { 
-            background: #1a1a1a; color: #fff; border: 1px solid #222; 
-            padding: 8px; font-size: 9px; cursor: pointer; 
-            border-radius: 4px; text-transform: uppercase;
-        }
+        .rnd-btn { background: #1a1a1a; color: #fff; border: 1px solid #222; padding: 8px; font-size: 9px; cursor: pointer; border-radius: 4px; text-transform: uppercase; }
 
-        details { margin-bottom: 8px; border: none; }
+        details { margin-bottom: 8px; }
         summary { 
             list-style: none; padding: 10px 15px; font-size: 11px; letter-spacing: 1px;
             text-transform: uppercase; cursor: pointer; border-radius: 50px; color: white;
             background: linear-gradient(180deg, rgba(40,40,40,0.4) 0%, rgba(0,0,0,1) 50%), #000;
-            display: flex; justify-content: center; align-items: center;
-            border: 1px solid transparent;
+            display: flex; justify-content: center; align-items: center; border: 1px solid transparent;
         }
-        summary::-webkit-details-marker { display: none; }
 
-        /* Step-down Outlines */
-        .step-1 summary { box-shadow: 0 0 0 1px var(--neon-green), inset 0 0 8px rgba(57, 255, 20, 0.1); }
-        .step-2 summary { box-shadow: 0 0 0 1px var(--mid-green), inset 0 0 8px rgba(41, 184, 16, 0.1); }
-        .step-3 summary { box-shadow: 0 0 0 1px var(--dark-green), inset 0 0 8px rgba(20, 90, 8, 0.1); }
-        .step-4 summary { box-shadow: 0 0 0 1px var(--deep-forest), inset 0 0 8px rgba(11, 43, 11, 0.1); }
+        .step-1 summary { box-shadow: 0 0 0 1px var(--neon-green); }
+        .step-2 summary { box-shadow: 0 0 0 1px var(--mid-green); }
+        .step-3 summary { box-shadow: 0 0 0 1px var(--dark-green); }
+        .step-4 summary { box-shadow: 0 0 0 1px var(--deep-forest); }
 
         .button-stack { display: flex; flex-direction: column; padding: 10px 5px; gap: 6px; }
-        button.part-btn { 
-            background: #111; color: #fff; border: 1px solid #222; 
-            padding: 9px; text-align: center; border-radius: 4px; cursor: pointer; font-size: 10px; 
-        }
+        button.part-btn { background: #111; color: #fff; border: 1px solid #222; padding: 9px; border-radius: 4px; cursor: pointer; font-size: 10px; }
         
-        select.system-select { 
-            background: #080808; color: #fff; border: 1px solid #222; 
-            padding: 10px; border-radius: 4px; width: 100%; cursor: pointer; font-size: 11px;
-            margin-bottom: 10px; outline: none;
-        }
+        select.system-select { background: #080808; color: #fff; border: 1px solid #222; padding: 10px; border-radius: 4px; width: 100%; cursor: pointer; font-size: 11px; margin-bottom: 10px; }
         
-        .color-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; padding: 10px 0; }
+        .color-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; padding: 5px 0; }
         .swatch { width: 100%; aspect-ratio: 1; border-radius: 2px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); }
-
-        @media (max-width: 768px) {
-            body { flex-direction: column; }
-            .sidebar { width: 100%; height: 45vh; border-left: none; border-top: 6px solid var(--neon-green); }
-            .viewer-container { height: 55vh; }
-        }
     </style>
 </head>
 <body>
@@ -128,13 +91,7 @@
         <span class="sub-logo">Unofficial AJPW</span>
         <h1 class="main-logo">Griffin Previewer</h1>
     </div>
-    <div class="spinner-container">
-        <div class="spin-diamond"></div>
-        <div class="spin-diamond"></div>
-        <div class="spin-diamond"></div>
-        <div class="spin-diamond"></div>
-    </div>
-    <p class="loading-text">Initializing Assets</p>
+    <div class="spinner-container"><div class="spin-diamond"></div></div>
 </div>
 
 <div class="viewer-container">
@@ -211,37 +168,26 @@
     <details class="step-3"><summary>Primary Color</summary><div class="button-stack" id="primary-container"></div></details>
     <details class="step-4"><summary>Secondary Color</summary><div class="button-stack" id="secondary-container"></div></details>
     <details class="step-4"><summary>Tertiary Color</summary><div class="button-stack" id="tertiary-container"></div></details>
-
-    <hr class="divider">
 </div>
 
 <script>
-    // BG Diamond Animation Setup
     const dbg = document.getElementById('diamond-bg');
-    for(let i=0; i<30; i++) {
-        const d = document.createElement('div');
-        d.className = 'bg-diamond';
-        const size = 100 + Math.random() * 150;
-        d.style.width = `${size}px`; d.style.height = `${size * 1.4}px`;
-        d.style.left = `${Math.random() * 100}%`; d.style.top = `${Math.random() * 100}%`;
-        d.style.animationDelay = `${Math.random() * 5}s`;
-        dbg.appendChild(d);
+    for(let i=0; i<20; i++) {
+        const d = document.createElement('div'); d.className = 'bg-diamond';
+        d.style.width = '120px'; d.style.height = '160px';
+        d.style.left = Math.random()*100+'%'; d.style.top = Math.random()*100+'%';
+        d.style.animationDelay = Math.random()*5+'s'; dbg.appendChild(d);
     }
 
-    // ALL 23 ORIGINAL PALETTES RESTORED
     const paletteData = [
-        { name: "Amethyst Wildflower", count: 12 }, { name: "Cerulean Sky", count: 14 },
-        { name: "Dreamy Lilac", count: 15 }, { name: "Dusty Taupe", count: 13 },
-        { name: "Earthy Umber", count: 15 }, { name: "Flaxen Ochre", count: 16 },
-        { name: "Florid Vermillion", count: 14 }, { name: "Forested Juniper", count: 14 },
-        { name: "Hazel Olive", count: 15 }, { name: "Lush Berry", count: 13 },
-        { name: "Misty Starlight", count: 13 }, { name: "Oceanic Sapphire", count: 15 },
-        { name: "Opulant Royalty", count: 14 }, { name: "Pale Pastel", count: 15 },
-        { name: "Rosy Sunset", count: 14 }, { name: "Russet Mahogany", count: 12 },
-        { name: "Seafoam Lagoon", count: 14 }, { name: "Shady Dark", count: 17 },
-        { name: "Smoky Dust", count: 13 }, { name: "Sunny Amber", count: 14 },
-        { name: "Verdant Lush", count: 15 }, { name: "Vibrant Neon", count: 18 },
-        { name: "Warm Tangerine", count: 15 }
+        { name: "Amethyst Wildflower", count: 12 }, { name: "Cerulean Sky", count: 14 }, { name: "Dreamy Lilac", count: 15 },
+        { name: "Dusty Taupe", count: 13 }, { name: "Earthy Umber", count: 15 }, { name: "Flaxen Ochre", count: 16 },
+        { name: "Florid Vermillion", count: 14 }, { name: "Forested Juniper", count: 14 }, { name: "Hazel Olive", count: 15 },
+        { name: "Lush Berry", count: 13 }, { name: "Misty Starlight", count: 13 }, { name: "Oceanic Sapphire", count: 15 },
+        { name: "Opulant Royalty", count: 14 }, { name: "Pale Pastel", count: 15 }, { name: "Rosy Sunset", count: 14 },
+        { name: "Russet Mahogany", count: 12 }, { name: "Seafoam Lagoon", count: 14 }, { name: "Shady Dark", count: 17 },
+        { name: "Smoky Dust", count: 13 }, { name: "Sunny Amber", count: 14 }, { name: "Verdant Lush", count: 15 },
+        { name: "Vibrant Neon", count: 18 }, { name: "Warm Tangerine", count: 15 }
     ];
 
     const main = document.querySelector('#griffin');
@@ -254,88 +200,70 @@
 
     ["primary", "secondary", "tertiary", "eye"].forEach(type => {
         const container = document.getElementById(`${type}-container`);
-        const sel = document.createElement('select');
-        sel.className = "system-select";
+        const sel = document.createElement('select'); sel.className = "system-select";
         paletteData.forEach((p, idx) => {
-            const opt = document.createElement('option');
-            opt.value = idx; opt.textContent = p.name;
-            sel.appendChild(opt);
+            const opt = document.createElement('option'); opt.value = idx; opt.textContent = p.name; sel.appendChild(opt);
         });
-
-        const grid = document.createElement('div');
-        grid.className = "color-grid";
-
-        const renderSwatches = (idx) => {
-            grid.innerHTML = '';
-            const p = paletteData[idx];
+        const grid = document.createElement('div'); grid.className = "color-grid";
+        const render = (idx) => {
+            grid.innerHTML = ''; const p = paletteData[idx];
             for(let i=0; i<p.count; i++) {
-                const h = (i * 360) / p.count;
-                const s = document.createElement('div');
-                s.className = "swatch";
-                s.style.background = `hsl(${h}, 60%, 50%)`;
-                s.onclick = () => { colors[type] = hslToRgb(h, 0.6, 0.5); updateAll(); };
+                const h = (i * 360) / p.count; const s = document.createElement('div'); s.className = "swatch";
+                s.style.background = `hsl(${h}, 60%, 50%)`; s.onclick = () => { colors[type] = hslToRgb(h, 0.6, 0.5); updateAll(); };
                 grid.appendChild(s);
             }
         };
-
-        sel.onchange = (e) => renderSwatches(e.target.value);
-        container.appendChild(sel);
-        container.appendChild(grid);
-        renderSwatches(0); 
+        sel.onchange = (e) => render(e.target.value); container.appendChild(sel); container.appendChild(grid); render(0);
     });
 
     function randomizeAll() { randomizeTraits(); randomizeColors(); }
     function randomizeTraits() {
-        activeParts.crest = ['bestial', 'pinnacle', 'windswept', 'harpy', 'none'][Math.floor(Math.random() * 5)];
-        updateAll();
+        activeParts.crest = ['bestial', 'pinnacle', 'windswept', 'harpy', 'none'][Math.floor(Math.random()*5)];
+        activeParts.wing = ['heroic', 'osprey', 'manticore', 'scarab', 'seraph', 'none'][Math.floor(Math.random()*6)];
+        activeParts.tail = ['fanned', 'svelte', 'tufted', 'scorpio', 'quetzal'][Math.floor(Math.random()*5)];
+        currentPattern = ['Griffin_Pattern00_HQ.png','Griffin_Pattern01_HQ.png','Griffin_Pattern02_HQ.png','Griffin_Pattern03_HQ.png','Griffin_Pattern04_HQ.png'][Math.floor(Math.random()*5)];
+        currentEyeShape = `Eye${Math.floor(Math.random()*12).toString().padStart(2,'0')}_Texture.png`;
+        document.getElementById('eyeShapeSelect').value = currentEyeShape; updateAll();
     }
     function randomizeColors() {
-        const rnd = () => hslToRgb(Math.random() * 360, 0.6, 0.5);
-        colors.primary = rnd(); colors.secondary = rnd(); colors.tertiary = rnd(); colors.eye = rnd();
-        updateAll();
+        const rnd = () => hslToRgb(Math.random()*360, 0.6, 0.5);
+        colors.primary = rnd(); colors.secondary = rnd(); colors.tertiary = rnd(); colors.eye = rnd(); updateAll();
     }
 
     async function processTexture(imgSrc, isEye = false) {
         const img = new Image(); img.crossOrigin = "anonymous"; img.src = imgSrc; await img.decode();
         offscreenCanvas.width = img.width; offscreenCanvas.height = img.height;
         offscreenCtx.drawImage(img, 0, 0);
-        const imageData = offscreenCtx.getImageData(0, 0, offscreenCanvas.width, offscreenCanvas.height), data = imageData.data;
+        const imageData = offscreenCtx.getImageData(0, 0, img.width, img.height), data = imageData.data;
         for (let i = 0; i < data.length; i += 4) {
             const r = data[i], g = data[i+1], b = data[i+2];
             if (isEye) {
-                if (r > 120 && g > 100) { 
-                    const factor = (r + g) / 510;
-                    data[i] = colors.eye.r * factor; data[i+1] = colors.eye.g * factor; data[i+2] = colors.eye.b * factor;
-                } else { data[i] = 0; data[i+1] = 0; data[i+2] = 0; }
-                data[i+3] = 255;
+                if (r > 120 && g > 100) { const f = (r + g) / 510; data[i] = colors.eye.r * f; data[i+1] = colors.eye.g * f; data[i+2] = colors.eye.b * f; }
+                else { data[i]=0; data[i+1]=0; data[i+2]=0; }
             } else {
-                const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-                if (lum < 0.03) continue;
-                let target = null;
-                if (r > 60 && r > g * 1.5 && r > b * 1.5) target = colors.primary;
-                else if (g > 70 && ((r > 70) || (g > r * 1.1)) && b < 170) target = colors.secondary;
-                else if (b > 50 || (r > 100 && b > 100)) target = colors.tertiary;
-                if (target) { data[i] = target.r; data[i+1] = target.g; data[i+2] = target.b; }
+                const lum = (0.299*r + 0.587*g + 0.114*b)/255; if (lum < 0.03) continue;
+                let t = null;
+                if (r > 60 && r > g*1.5 && r > b*1.5) t = colors.primary;
+                else if (g > 70 && (r > 70 || g > r*1.1) && b < 170) t = colors.secondary;
+                else if (b > 50 || (r > 100 && b > 100)) t = colors.tertiary;
+                if (t) { data[i] = t.r; data[i+1] = t.g; data[i+2] = t.b; }
             }
         }
         offscreenCtx.putImageData(imageData, 0, 0); return offscreenCanvas.toDataURL();
     }
 
     function togglePart(type, name) {
-        activeParts[type] = name;
-        if (!main.model) return;
-        const sceneSymbol = Object.getOwnPropertySymbols(main).find(s => s.description === 'scene');
-        const scene = main[sceneSymbol];
-        if (!scene) return;
+        activeParts[type] = name; if (!main.model) return;
+        const scene = main[Object.getOwnPropertySymbols(main).find(s => s.description === 'scene')];
         scene.traverse((obj) => {
             if (obj.isMesh || obj.isGroup) {
-                const nodeName = obj.name.toLowerCase();
+                const n = obj.name.toLowerCase();
                 if (type === 'eye') {
-                    if (nodeName.includes('mesh_eyes_normal')) obj.visible = (name === 'Mesh_Eyes_Normal');
-                    if (nodeName.includes('mesh_eyes_lashes')) obj.visible = (name === 'Mesh_Eyes_Lashes');
+                    if (n.includes('normal')) obj.visible = (name === 'Mesh_Eyes_Normal');
+                    if (n.includes('lashes')) obj.visible = (name === 'Mesh_Eyes_Lashes');
                 } else {
-                    const catList = ['bestial', 'pinnacle', 'windswept', 'harpy', 'none', 'heroic', 'osprey', 'manticore', 'scarab', 'seraph', 'fanned', 'svelte', 'tufted', 'scorpio', 'quetzal'];
-                    if (catList.includes(nodeName)) obj.visible = (nodeName === name.toLowerCase());
+                    const traits = ['bestial','pinnacle','windswept','harpy','none','heroic','osprey','manticore','scarab','seraph','fanned','svelte','tufted','scorpio','quetzal'];
+                    if (traits.includes(n)) obj.visible = (n === name.toLowerCase());
                 }
             }
         });
@@ -343,21 +271,17 @@
 
     async function updateAll() {
         if (!main.model) return;
-        const bodyBake = await processTexture(currentPattern);
-        const wingBake = await processTexture('Griffin_Wings.png');
-        const tcBake = await processTexture('Griffin_Tails_Crests.png');
-        const eyeBake = await processTexture(currentEyeShape, true);
-        const materialMap = { "Mat_GriffinBody": bodyBake, "Mat_Wings": wingBake, "Mat_Tails_Crests": tcBake, "Mat_Eyes": eyeBake };
+        const b = await processTexture(currentPattern), w = await processTexture('Griffin_Wings.png'), tc = await processTexture('Griffin_Tails_Crests.png'), e = await processTexture(currentEyeShape, true);
+        const materialMap = { "Mat_GriffinBody": b, "Mat_Wings": w, "Mat_Tails_Crests": tc, "Mat_Eyes": e };
         for (const mat of main.model.materials) {
-            const texData = materialMap[mat.name];
-            if (texData) {
-                const tex = await main.createTexture(texData);
-                if (mat.pbrMetallicRoughness.baseColorTexture) mat.pbrMetallicRoughness.baseColorTexture.setTexture(tex);
+            if (materialMap[mat.name]) {
+                const tex = await main.createTexture(materialMap[mat.name]);
+                mat.pbrMetallicRoughness.baseColorTexture.setTexture(tex);
             }
         }
-        Object.keys(activeParts).forEach(type => togglePart(type, activeParts[type]));
-        const loader = document.getElementById('loading-overlay');
-        if (loader) { loader.style.opacity = '0'; setTimeout(() => loader.remove(), 1000); }
+        Object.keys(activeParts).forEach(k => togglePart(k, activeParts[k]));
+        document.getElementById('loading-overlay').style.opacity = '0';
+        setTimeout(() => document.getElementById('loading-overlay').remove(), 1000);
     }
 
     function changeEyeShape(f) { currentEyeShape = f; updateAll(); }
