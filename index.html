@@ -8,7 +8,9 @@
     <style>
         :root {
             --neon-green: #39ff14;
-            --dark-green: #0b2b0b;
+            --mid-green: #29b810;
+            --dark-green: #145a08;
+            --deep-forest: #0b2b0b;
         }
 
         body { margin: 0; background: #000; color: white; font-family: 'Georgia', serif; display: flex; height: 100vh; overflow: hidden; }
@@ -48,12 +50,9 @@
         .stars { position: absolute; width: 100%; height: 100%; background-image: radial-gradient(1px 1px at 25px 35px, #fff, rgba(0,0,0,0)), radial-gradient(1px 1px at 60px 120px, #fff, rgba(0,0,0,0)); background-size: 400px 400px; opacity: 0.3; }
         .diamond-container { position: absolute; width: 100%; height: 100%; opacity: 0.05; pointer-events: none; }
         .bg-diamond { position: absolute; background: var(--neon-green); clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); animation: pulse 8s infinite ease-in-out; }
-        .shimmer-sweep { position: absolute; top: 0; left: -100%; width: 60%; height: 100%; background: linear-gradient(90deg, transparent, rgba(57, 255, 20, 0.05), transparent); transform: skewX(-20deg); animation: sweep 7s infinite; }
 
         @keyframes sweep { 0% { left: -120%; } 100% { left: 220%; } }
         @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.1); opacity: 1; } }
-
-        .loading-text { font-size: 11px; letter-spacing: 4px; color: #666; text-transform: uppercase; }
 
         /* --- MYSTIC SIDEBAR --- */
         .viewer-container { flex: 1; position: relative; background: radial-gradient(#1a1a1a, #000); }
@@ -63,24 +62,20 @@
             width: 320px; 
             background: #000; 
             border-left: 6px solid;
-            border-image: linear-gradient(to bottom, var(--neon-green), var(--dark-green)) 1;
+            border-image: linear-gradient(to bottom, var(--neon-green), var(--deep-forest)) 1;
             display: flex; flex-direction: column; 
             overflow-y: auto; padding: 20px 15px;
             z-index: 5;
         }
 
-        /* Section Dividers */
         .section-title { font-size: 11px; color: #fff; text-transform: uppercase; letter-spacing: 3px; margin: 15px 0 5px 0; text-align: center; }
         .divider { height: 1px; background: #222; margin: 10px 0; border: none; }
 
-        /* Randomize Controls */
         .random-btn-full { 
             background: #222; color: #fff; border: 1px solid #333; 
             padding: 12px; font-size: 10px; cursor: pointer; border-radius: 50px; 
             text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px;
-            transition: 0.2s;
         }
-        .random-btn-full:hover { background: #333; border-color: var(--neon-green); }
 
         .random-box { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; }
         .rnd-btn { 
@@ -90,41 +85,42 @@
             border-radius: 4px; text-transform: uppercase;
         }
 
-        /* --- PILL BUTTONS (MAIN DROPDOWNS) --- */
+        /* --- GRADIENT PILL BUTTONS --- */
         details { margin-bottom: 8px; border: none; }
         summary { 
-            list-style: none;
-            padding: 10px 15px;
-            font-size: 11px;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            cursor: pointer;
-            border-radius: 50px; 
-            color: white;
-            border: 1px solid var(--dark-green); /* Thinner outline */
-            background: 
-                linear-gradient(180deg, rgba(40,40,40,0.4) 0%, rgba(0,0,0,1) 50%), /* Darker gray shine */
-                #000;
-            box-shadow: 
-                0 0 0 1px var(--neon-green), 
-                inset 0 0 8px rgba(57, 255, 20, 0.1);
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            list-style: none; padding: 10px 15px; font-size: 11px; letter-spacing: 1px;
+            text-transform: uppercase; cursor: pointer; border-radius: 50px; color: white;
+            background: linear-gradient(180deg, rgba(40,40,40,0.4) 0%, rgba(0,0,0,1) 50%), #000;
+            display: flex; justify-content: center; align-items: center;
+            border: 1px solid transparent;
         }
         summary::-webkit-details-marker { display: none; }
 
-        /* --- INNER BUTTONS --- */
+        /* Step-down Green Outlines */
+        .step-1 summary { box-shadow: 0 0 0 1px var(--neon-green), inset 0 0 8px rgba(57, 255, 20, 0.1); }
+        .step-2 summary { box-shadow: 0 0 0 1px var(--mid-green), inset 0 0 8px rgba(41, 184, 16, 0.1); }
+        .step-3 summary { box-shadow: 0 0 0 1px var(--dark-green), inset 0 0 8px rgba(20, 90, 8, 0.1); }
+        .step-4 summary { box-shadow: 0 0 0 1px var(--deep-forest), inset 0 0 8px rgba(11, 43, 11, 0.1); }
+
+        /* Color category dropdowns style override (Plain buttons) */
+        .color-category summary { 
+            border: 1px solid #333; 
+            background: #111; 
+            box-shadow: none; 
+            font-size: 10px; 
+            border-radius: 8px;
+            padding: 8px;
+        }
+
         .button-stack { display: flex; flex-direction: column; padding: 10px 5px; gap: 6px; }
         button.part-btn { 
             background: #111; color: #fff; border: 1px solid #222; 
             padding: 9px; text-align: center; border-radius: 4px; cursor: pointer; font-size: 10px; 
         }
-        button.part-btn:hover { background: #1a1a1a; }
         
         select.part-select { 
             background: #080808; color: #fff; border: 1px solid #222; 
-            padding: 10px; border-radius: 4px; width: 100%; cursor: pointer; outline: none; font-size: 10px;
+            padding: 10px; border-radius: 4px; width: 100%; cursor: pointer; font-size: 10px;
         }
         
         .palette-group { background: transparent; padding: 2px 0; }
@@ -143,7 +139,6 @@
 <div id="loading-overlay">
     <div class="stars"></div>
     <div class="diamond-container" id="diamond-bg"></div>
-    <div class="shimmer-sweep"></div>
     <div class="logo-wrap">
         <span class="sub-logo">Unofficial AJPW</span>
         <h1 class="main-logo">Griffin Previewer</h1>
@@ -171,7 +166,7 @@
     <div class="section-title">Traits</div>
     <hr class="divider">
 
-    <details><summary>Crest</summary><div class="button-stack">
+    <details class="step-1" open><summary>Crest</summary><div class="button-stack">
         <button class="part-btn" onclick="togglePart('crest', 'bestial')">BESTIAL</button>
         <button class="part-btn" onclick="togglePart('crest', 'pinnacle')">PINNACLE</button>
         <button class="part-btn" onclick="togglePart('crest', 'windswept')">WINDSWEPT</button>
@@ -179,7 +174,7 @@
         <button class="part-btn" onclick="togglePart('crest', 'none')">NONE</button>
     </div></details>
 
-    <details open><summary>Eye Shape</summary><div class="button-stack">
+    <details class="step-2"><summary>Eye Shape</summary><div class="button-stack">
         <button class="part-btn" onclick="togglePart('eye', 'Mesh_Eyes_Normal')">Standard Eyes</button>
         <button class="part-btn" onclick="togglePart('eye', 'Mesh_Eyes_Lashes')">Eyelash Eyes</button>
         <select id="eyeShapeSelect" class="part-select" onchange="changeEyeShape(this.value)">
@@ -198,7 +193,7 @@
         </select>
     </div></details>
 
-    <details><summary>Wings</summary><div class="button-stack">
+    <details class="step-3"><summary>Wings</summary><div class="button-stack">
         <button class="part-btn" onclick="togglePart('wing', 'heroic')">HEROIC</button>
         <button class="part-btn" onclick="togglePart('wing', 'osprey')">OSPREY</button>
         <button class="part-btn" onclick="togglePart('wing', 'manticore')">MANTICORE</button>
@@ -207,7 +202,7 @@
         <button class="part-btn" onclick="togglePart('wing', 'none')">NONE</button>
     </div></details>
 
-    <details><summary>Tail</summary><div class="button-stack">
+    <details class="step-4"><summary>Tail</summary><div class="button-stack">
         <button class="part-btn" onclick="togglePart('tail', 'fanned')">FANNED</button>
         <button class="part-btn" onclick="togglePart('tail', 'svelte')">SVELTE</button>
         <button class="part-btn" onclick="togglePart('tail', 'tufted')">TUFTED</button>
@@ -219,7 +214,7 @@
     <div class="section-title">Color & Pattern</div>
     <hr class="divider">
 
-    <details><summary>Body Pattern</summary><div class="button-stack">
+    <details class="step-1"><summary>Body Pattern</summary><div class="button-stack">
         <button class="part-btn" onclick="changePattern('Griffin_Pattern00_HQ.png')">DRIFTER</button>
         <button class="part-btn" onclick="changePattern('Griffin_Pattern02_HQ.png')">DUOCHROME</button>
         <button class="part-btn" onclick="changePattern('Griffin_Pattern01_HQ.png')">SHINING</button>
@@ -227,10 +222,10 @@
         <button class="part-btn" onclick="changePattern('Griffin_Pattern04_HQ.png')">HARFANG</button>
     </div></details>
 
-    <details><summary>Eye Color</summary><div id="eye-container"></div></details>
-    <details><summary>Primary Color</summary><div id="primary-container"></div></details>
-    <details><summary>Secondary Color</summary><div id="secondary-container"></div></details>
-    <details><summary>Tertiary Color</summary><div id="tertiary-container"></div></details>
+    <details class="step-2"><summary>Eye Color</summary><div id="eye-container"></div></details>
+    <details class="step-3"><summary>Primary Color</summary><div id="primary-container"></div></details>
+    <details class="step-4"><summary>Secondary Color</summary><div id="secondary-container"></div></details>
+    <details class="step-4"><summary>Tertiary Color</summary><div id="tertiary-container"></div></details>
 
     <hr class="divider">
 </div>
@@ -274,10 +269,7 @@
         });
     });
 
-    function randomizeAll() {
-        randomizeTraits();
-        randomizeColors();
-    }
+    function randomizeAll() { randomizeTraits(); randomizeColors(); }
 
     function randomizeTraits() {
         activeParts.eye = Math.random() > 0.5 ? 'Mesh_Eyes_Normal' : 'Mesh_Eyes_Lashes';
@@ -367,7 +359,7 @@
     ["primary", "secondary", "tertiary", "eye"].forEach(type => {
         const container = document.getElementById(`${type}-container`);
         paletteData.forEach(p => {
-            const det = document.createElement('details'); det.className = "palette-group"; det.innerHTML = `<summary style="font-size:9px; border:none; padding:6px; border-radius:10px; margin-bottom:5px;">${p.name}</summary><div class="color-grid"></div>`; container.appendChild(det);
+            const det = document.createElement('details'); det.className = "palette-group color-category"; det.innerHTML = `<summary>${p.name}</summary><div class="color-grid"></div>`; container.appendChild(det);
             const grid = det.querySelector('.color-grid');
             for(let i=0; i<p.count; i++) {
                 const s = document.createElement('div'); s.className = "swatch"; const h = (i * 360) / p.count; s.style.background = `hsl(${h}, 60%, 50%)`;
