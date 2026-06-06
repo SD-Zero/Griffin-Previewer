@@ -232,24 +232,11 @@
         activeParts.eye = Math.random() > 0.5 ? 'Mesh_Eyes_Normal' : 'Mesh_Eyes_Lashes';
         activeParts.crest = crestList[Math.floor(Math.random() * crestList.length)];
         activeParts.wing = wingList[Math.floor(Math.random() * wingList.length)];
-        const randomTail = tailList[Math.floor(Math.random() * tailList.length)];
-        activeParts.tail = randomTail;
+        activeParts.tail = tailList[Math.floor(Math.random() * tailList.length)];
         currentPattern = patternList[Math.floor(Math.random() * patternList.length)];
         currentEyeShape = eyeTextureList[Math.floor(Math.random() * eyeTextureList.length)];
-        document.getElementById('eyeShapeSelect').value = currentEyeShape;
-        
-        if (main.model) {
-            const sceneSymbol = Object.getOwnPropertySymbols(main).find(s => s.description === 'scene');
-            const scene = main[sceneSymbol];
-            if (scene) {
-                scene.traverse((obj) => {
-                    if (obj.isMesh || obj.isGroup) {
-                        const name = obj.name.toLowerCase();
-                        if(tailList.includes(name)) obj.visible = (name === randomTail.toLowerCase());
-                    }
-                });
-            }
-        }
+        const eyeSel = document.getElementById('eyeShapeSelect');
+        if(eyeSel) eyeSel.value = currentEyeShape;
         updateAll();
     }
 
@@ -260,51 +247,53 @@
     }
 
     async function processTexture(imgSrc, isEye = false) {
-        const img = new Image(); img.crossOrigin = "anonymous"; img.src = imgSrc;
-        await img.decode();
-        offscreenCanvas.width = img.width; offscreenCanvas.height = img.height;
-        offscreenCtx.drawImage(img, 0, 0);
-        const imageData = offscreenCtx.getImageData(0, 0, offscreenCanvas.width, offscreenCanvas.height), data = imageData.data;
-        for (let i = 0; i < data.length; i += 4) {
-            const r = data[i], g = data[i+1], b = data[i+2];
-            if (isEye) {
-                if (r > 120 && g > 100) {
-                    const factor = (r + g) / 510;
-                    data[i] = colors.eye.r * factor; data[i+1] = colors.eye.g * factor; data[i+2] = colors.eye.b * factor;
-                } else { data[i] = 0; data[i+1] = 0; data[i+2] = 0; }
-                data[i+3] = 255;
-            } else {
-                const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-                if (lum < 0.03) continue;
-                let target = null;
-                if (r > 60 && r > g * 1.5 && r > b * 1.5) target = colors.primary;
-                else if (g > 70 && ((r > 70) || (g > r * 1.1)) && b < 170) target = colors.secondary;
-                else if (b > 50 || (r > 100 && b > 100)) target = colors.tertiary;
-                if (target) { data[i] = target.r; data[i+1] = target.g; data[i+2] = target.b; }
+        try {
+            const img = new Image(); img.crossOrigin = "anonymous"; img.src = imgSrc;
+            await img.decode();
+            offscreenCanvas.width = img.width; offscreenCanvas.height = img.height;
+            offscreenCtx.drawImage(img, 0, 0);
+            const imageData = offscreenCtx.getImageData(0, 0, offscreenCanvas.width, offscreenCanvas.height), data = imageData.data;
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i], g = data[i+1], b = data[i+2];
+                if (isEye) {
+                    if (r > 120 && g > 100) {
+                        const factor = (r + g) / 510;
+                        data[i] = colors.eye.r * factor; data[i+1] = colors.eye.g * factor; data[i+2] = colors.eye.b * factor;
+                    } else { data[i] = 0; data[i+1] = 0; data[i+2] = 0; }
+                    data[i+3] = 255;
+                } else {
+                    const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+                    if (lum < 0.03) continue;
+                    let target = null;
+                    if (r > 60 && r > g * 1.5 && r > b * 1.5) target = colors.primary;
+                    else if (g > 70 && ((r > 70) || (g > r * 1.1)) && b < 170) target = colors.secondary;
+                    else if (b > 50 || (r > 100 && b > 100)) target = colors.tertiary;
+                    if (target) { data[i] = target.r; data[i+1] = target.g; data[i+2] = target.b; }
+                }
             }
+            offscreenCtx.putImageData(imageData, 0, 0);
+            return offscreenCanvas.toDataURL();
+        } catch (e) {
+            console.warn("Texture load failed:", imgSrc);
+            return null;
         }
-        offscreenCtx.putImageData(imageData, 0, 0);
-        return offscreenCanvas.toDataURL();
     }
 
     function togglePart(type, name) {
         activeParts[type] = name;
         if (!main.model) return;
-        const sceneSymbol = Object.getOwnPropertySymbols(main).find(s => s.description === 'scene');
-        const scene = main[sceneSymbol];
-        if (!scene) return;
-        scene.traverse((obj) => {
+        const sceneSym = Object.getOwnPropertySymbols(main).find(x => x.description === "scene");
+        if (!sceneSym || !main[sceneSym]) return;
+        
+        main[sceneSym].traverse((obj) => {
             if (obj.isMesh || obj.isGroup) {
                 const nodeName = obj.name.toLowerCase();
                 if (type === 'eye') {
                     if(nodeName.includes('mesh_eyes_normal')) obj.visible = (name === 'Mesh_Eyes_Normal');
                     if(nodeName.includes('mesh_eyes_lashes')) obj.visible = (name === 'Mesh_Eyes_Lashes');
                 } else {
-                    let catMatch = false;
-                    if(type === 'crest' && crestList.includes(nodeName)) catMatch = true;
-                    if (type === 'wing' && wingList.includes(nodeName)) catMatch = true;
-                    if (type === 'tail' && tailList.includes(nodeName)) catMatch = true;
-                    if(catMatch) obj.visible = (nodeName === name.toLowerCase());
+                    let catList = type === 'crest' ? crestList : (type === 'wing' ? wingList : tailList);
+                    if(catList.includes(nodeName)) obj.visible = (nodeName === name.toLowerCase());
                 }
             }
         });
@@ -312,19 +301,21 @@
 
     async function updateAll() {
         if (!main.model) return;
-        const bodyBake = await processTexture(currentPattern);
-        const wingBake = await processTexture('Griffin_Wings.png');
-        const tcBake = await processTexture('Griffin_Tails_Crests.png');
-        const eyeBake = await processTexture(currentEyeShape, true);
-        const materialMap = { "Mat_GriffinBody": bodyBake, "Mat_Wings": wingBake, "Mat_Tails_Crests": tcBake, "Mat_Eyes": eyeBake };
-        for (const mat of main.model.materials) {
-            const texData = materialMap[mat.name];
-            if (texData) {
-                const tex = await main.createTexture(texData);
+        const b = await processTexture(currentPattern);
+        const w = await processTexture('Griffin_Wings.png');
+        const t = await processTexture('Griffin_Tails_Crests.png');
+        const e = await processTexture(currentEyeShape, true);
+        
+        const materialMap = { "Mat_GriffinBody": b, "Mat_Wings": w, "Mat_Tails_Crests": t, "Mat_Eyes": e };
+        main.model.materials.forEach(mat => {
+            const data = materialMap[mat.name];
+            if (data) main.createTexture(data).then(tex => {
                 if(mat.pbrMetallicRoughness.baseColorTexture) mat.pbrMetallicRoughness.baseColorTexture.setTexture(tex);
-            }
-        }
+            });
+        });
+        
         Object.keys(activeParts).forEach(type => togglePart(type, activeParts[type]));
+        
         const loader = document.getElementById('loading-overlay');
         if (loader) { loader.style.opacity = '0'; setTimeout(() => loader.remove(), 1000); }
     }
@@ -343,7 +334,6 @@
             const opt = document.createElement('option');
             opt.value = p.name; opt.textContent = p.name;
             select.appendChild(opt);
-
             const pg = document.createElement('div');
             pg.className = "palette-group";
             if(idx === 0) pg.classList.add('active');
