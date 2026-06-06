@@ -38,6 +38,8 @@
         
         .sidebar { width: 320px; background: #000; border-left: 2px solid #00d4ff; display: flex; flex-direction: column; overflow-y: auto; padding: 10px; transition: all 0.3s ease; box-shadow: -5px 0 20px rgba(0, 212, 255, 0.2); }
         
+        .disclaimer-text { font-size: 9px; color: #555; text-align: center; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+
         .random-box { display: grid; grid-template-columns: 1fr; gap: 5px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #222; }
         .rnd-btn { background: #00d4ff; color: #000; border: none; padding: 10px; font-weight: bold; font-size: 10px; cursor: pointer; border-radius: 4px; text-transform: uppercase; transition: 0.3s; }
         .rnd-btn:hover { background: #fff; box-shadow: 0 0 10px #00d4ff; }
@@ -100,6 +102,22 @@
 </div>
 
 <div class="sidebar">
+    <div class="disclaimer-text">DISCLAIMER: This project is unofficial. All models/textures belong to WildWorks.</div>
+
+    <details>
+        <summary>ADVANCED RANDOMIZER SETTINGS</summary>
+        <div class="adv-settings">
+            <h4>Trait Exclusions</h4>
+            <div id="trait-exclusions">
+                </div>
+            
+            <h4>Allowed Palettes (Colors)</h4>
+            <div style="font-size: 9px; margin-bottom: 8px;">If none selected, all are allowed.</div>
+            <div id="palette-filters">
+                </div>
+        </div>
+    </details>
+
     <div class="random-box">
         <button class="rnd-btn" onclick="randomizeAll()" style="background:#fff; border: 2px solid #00d4ff;">Randomize All</button>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 5px;">
@@ -215,22 +233,6 @@
         </div>
     </details>
 
-    <hr class="section-divider" style="margin-top:20px;">
-    
-    <details>
-        <summary>ADVANCED RANDOMIZER SETTINGS</summary>
-        <div class="adv-settings">
-            <h4>Trait Exclusions</h4>
-            <div id="trait-exclusions">
-                </div>
-            
-            <h4>Allowed Palettes (Colors)</h4>
-            <div style="font-size: 9px; margin-bottom: 8px;">If none selected, all are allowed.</div>
-            <div id="palette-filters">
-                </div>
-        </div>
-    </details>
-    
     <hr class="section-divider" style="margin-top:20px;">
 </div>
 
