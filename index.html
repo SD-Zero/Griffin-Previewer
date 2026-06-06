@@ -36,6 +36,12 @@
         .viewer-container { flex: 1; position: relative; background: radial-gradient(#333, #000); }
         model-viewer { width: 100%; height: 100%; --poster-color: transparent; }
         
+        /* New Tab Switcher Buttons */
+        .tab-controls { position: absolute; top: 20px; left: 20px; z-index: 10; display: flex; gap: 10px; }
+        .tab-btn { background: rgba(0, 0, 0, 0.7); color: #00d4ff; border: 1px solid #00d4ff; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; text-transform: uppercase; transition: 0.3s; }
+        .tab-btn:hover { background: #00d4ff; color: #000; }
+        .tab-btn.active { background: #00d4ff; color: #000; box-shadow: 0 0 10px #00d4ff; }
+
         .sidebar { width: 320px; background: #000; border-left: 2px solid #00d4ff; display: flex; flex-direction: column; overflow-y: auto; padding: 10px; transition: all 0.3s ease; box-shadow: -5px 0 20px rgba(0, 212, 255, 0.2); }
         
         .random-box { display: grid; grid-template-columns: 1fr; gap: 5px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #222; }
@@ -84,7 +90,11 @@
 </div>
 
 <div class="viewer-container">
-    <model-viewer id="griffin" src="griffin-main.glb" camera-controls auto-rotate interaction-prompt="none" shadow-intensity="1" exposure="1.2" environment-image="neutral"></model-viewer>
+    <div class="tab-controls">
+        <button id="btn-animal" class="tab-btn active" onclick="switchModel('Griffin-Main.glb', 'btn-animal')">Animal</button>
+        <button id="btn-pet" class="tab-btn" onclick="switchModel('Pet-Griffin-Main.glb', 'btn-pet')">Pet</button>
+    </div>
+    <model-viewer id="griffin" src="Griffin-Main.glb" camera-controls auto-rotate interaction-prompt="none" shadow-intensity="1" exposure="1.2" environment-image="neutral"></model-viewer>
 </div>
 
 <div class="sidebar">
@@ -226,6 +236,13 @@
         });
     });
 
+    function switchModel(src, btnId) {
+        main.src = src;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(btnId).classList.add('active');
+        // updateAll will be called automatically by the 'load' event listener on the viewer
+    }
+
     function randomizeAll() { randomizeTraits(); randomizeColors(); }
 
     function randomizeTraits() {
@@ -237,19 +254,6 @@
         currentPattern = patternList[Math.floor(Math.random() * patternList.length)];
         currentEyeShape = eyeTextureList[Math.floor(Math.random() * eyeTextureList.length)];
         document.getElementById('eyeShapeSelect').value = currentEyeShape;
-        
-        if (main.model) {
-            const sceneSymbol = Object.getOwnPropertySymbols(main).find(s => s.description === 'scene');
-            const scene = main[sceneSymbol];
-            if (scene) {
-                scene.traverse((obj) => {
-                    if (obj.isMesh || obj.isGroup) {
-                        const name = obj.name.toLowerCase();
-                        if(tailList.includes(name)) obj.visible = (name === randomTail.toLowerCase());
-                    }
-                });
-            }
-        }
         updateAll();
     }
 
@@ -261,30 +265,32 @@
 
     async function processTexture(imgSrc, isEye = false) {
         const img = new Image(); img.crossOrigin = "anonymous"; img.src = imgSrc;
-        await img.decode();
-        offscreenCanvas.width = img.width; offscreenCanvas.height = img.height;
-        offscreenCtx.drawImage(img, 0, 0);
-        const imageData = offscreenCtx.getImageData(0, 0, offscreenCanvas.width, offscreenCanvas.height), data = imageData.data;
-        for (let i = 0; i < data.length; i += 4) {
-            const r = data[i], g = data[i+1], b = data[i+2];
-            if (isEye) {
-                if (r > 120 && g > 100) {
-                    const factor = (r + g) / 510;
-                    data[i] = colors.eye.r * factor; data[i+1] = colors.eye.g * factor; data[i+2] = colors.eye.b * factor;
-                } else { data[i] = 0; data[i+1] = 0; data[i+2] = 0; }
-                data[i+3] = 255;
-            } else {
-                const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-                if (lum < 0.03) continue;
-                let target = null;
-                if (r > 60 && r > g * 1.5 && r > b * 1.5) target = colors.primary;
-                else if (g > 70 && ((r > 70) || (g > r * 1.1)) && b < 170) target = colors.secondary;
-                else if (b > 50 || (r > 100 && b > 100)) target = colors.tertiary;
-                if (target) { data[i] = target.r; data[i+1] = target.g; data[i+2] = target.b; }
+        try {
+            await img.decode();
+            offscreenCanvas.width = img.width; offscreenCanvas.height = img.height;
+            offscreenCtx.drawImage(img, 0, 0);
+            const imageData = offscreenCtx.getImageData(0, 0, offscreenCanvas.width, offscreenCanvas.height), data = imageData.data;
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i], g = data[i+1], b = data[i+2];
+                if (isEye) {
+                    if (r > 120 && g > 100) {
+                        const factor = (r + g) / 510;
+                        data[i] = colors.eye.r * factor; data[i+1] = colors.eye.g * factor; data[i+2] = colors.eye.b * factor;
+                    } else { data[i] = 0; data[i+1] = 0; data[i+2] = 0; }
+                    data[i+3] = 255;
+                } else {
+                    const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+                    if (lum < 0.03) continue;
+                    let target = null;
+                    if (r > 60 && r > g * 1.5 && r > b * 1.5) target = colors.primary;
+                    else if (g > 70 && ((r > 70) || (g > r * 1.1)) && b < 170) target = colors.secondary;
+                    else if (b > 50 || (r > 100 && b > 100)) target = colors.tertiary;
+                    if (target) { data[i] = target.r; data[i+1] = target.g; data[i+2] = target.b; }
+                }
             }
-        }
-        offscreenCtx.putImageData(imageData, 0, 0);
-        return offscreenCanvas.toDataURL();
+            offscreenCtx.putImageData(imageData, 0, 0);
+            return offscreenCanvas.toDataURL();
+        } catch (e) { return null; }
     }
 
     function togglePart(type, name) {
@@ -300,11 +306,8 @@
                     if(nodeName.includes('mesh_eyes_normal')) obj.visible = (name === 'Mesh_Eyes_Normal');
                     if(nodeName.includes('mesh_eyes_lashes')) obj.visible = (name === 'Mesh_Eyes_Lashes');
                 } else {
-                    let catMatch = false;
-                    if(type === 'crest' && crestList.includes(nodeName)) catMatch = true;
-                    if (type === 'wing' && wingList.includes(nodeName)) catMatch = true;
-                    if (type === 'tail' && tailList.includes(nodeName)) catMatch = true;
-                    if(catMatch) obj.visible = (nodeName === name.toLowerCase());
+                    let listToCheck = (type === 'crest') ? crestList : (type === 'wing' ? wingList : tailList);
+                    if(listToCheck.includes(nodeName)) obj.visible = (nodeName === name.toLowerCase());
                 }
             }
         });
@@ -343,7 +346,6 @@
             const opt = document.createElement('option');
             opt.value = p.name; opt.textContent = p.name;
             select.appendChild(opt);
-
             const pg = document.createElement('div');
             pg.className = "palette-group";
             if(idx === 0) pg.classList.add('active');
