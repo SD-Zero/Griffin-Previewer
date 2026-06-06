@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Griffin Creator Ultimate</title>
+    <title>Griffin Previewer | Unofficial AJPW</title>
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <style>
         body { margin: 0; background: #000; color: white; font-family: sans-serif; display: flex; height: 100vh; overflow: hidden; }
         
-        /* --- REFINED INITIALIZING SCREEN --- */
+        /* --- BRANDED INITIALIZING SCREEN --- */
         #loading-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; 
@@ -18,64 +18,49 @@
             overflow: hidden;
         }
 
-        /* Starfield Effect */
+        /* Logo Branding */
+        .logo-wrap { text-align: center; margin-bottom: 40px; position: relative; z-index: 2; }
+        .sub-logo { font-size: 10px; letter-spacing: 3px; color: #9b51e0; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; display: block; }
+        .main-logo { font-size: 28px; letter-spacing: 6px; color: #fff; text-transform: uppercase; font-weight: 900; text-shadow: 0 0 20px rgba(0, 212, 255, 0.4); }
+
+        /* Diamond Spinner */
+        .spinner-container { position: relative; width: 60px; height: 60px; margin-bottom: 20px; }
+        .spin-diamond {
+            position: absolute; width: 12px; height: 18px;
+            background: linear-gradient(#00d4ff, #9b51e0);
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+            left: 24px; top: 0;
+            transform-origin: 6px 30px;
+            animation: diamond-spin 1.5s infinite cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+        /* Multiple diamonds for the circle */
+        .spin-diamond:nth-child(2) { animation-delay: 0.2s; opacity: 0.8; }
+        .spin-diamond:nth-child(3) { animation-delay: 0.4s; opacity: 0.6; }
+        .spin-diamond:nth-child(4) { animation-delay: 0.6s; opacity: 0.4; }
+
+        @keyframes diamond-spin { 
+            0% { transform: rotate(0deg) scale(1); } 
+            100% { transform: rotate(360deg) scale(1); } 
+        }
+
+        /* Background Effects */
         .stars {
             position: absolute; width: 100%; height: 100%;
             background-image: 
                 radial-gradient(1px 1px at 25px 35px, #fff, rgba(0,0,0,0)),
                 radial-gradient(1px 1px at 60px 120px, #fff, rgba(0,0,0,0)),
-                radial-gradient(2px 2px at 180px 190px, #fff, rgba(0,0,0,0)),
-                radial-gradient(1px 1px at 280px 60px, #fff, rgba(0,0,0,0)),
-                radial-gradient(2px 2px at 320px 280px, #fff, rgba(0,0,0,0));
-            background-size: 400px 400px;
-            opacity: 0.4;
-            animation: twinkle 5s infinite alternate;
+                radial-gradient(2px 2px at 180px 190px, #fff, rgba(0,0,0,0));
+            background-size: 400px 400px; opacity: 0.4; animation: twinkle 5s infinite alternate;
         }
-
-        /* Diamond Patterns */
-        .diamond-container {
-            position: absolute; width: 100%; height: 100%;
-            display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
-            opacity: 0.08; /* Very faint as requested */
-            pointer-events: none;
-        }
-        .diamond {
-            position: absolute;
-            background: linear-gradient(135deg, #00d4ff 0%, #9b51e0 100%);
-            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
-            animation: pulse 8s infinite ease-in-out;
-        }
-
-        /* Shimmer Sweep */
-        .shimmer-sweep {
-            position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent);
-            transform: skewX(-20deg);
-            animation: sweep 6s infinite;
-        }
+        .diamond-container { position: absolute; width: 100%; height: 100%; opacity: 0.08; pointer-events: none; }
+        .bg-diamond { position: absolute; background: linear-gradient(135deg, #00d4ff 0%, #9b51e0 100%); clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); animation: pulse 8s infinite ease-in-out; }
+        .shimmer-sweep { position: absolute; top: 0; left: -100%; width: 60%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent); transform: skewX(-20deg); animation: sweep 6s infinite; }
 
         @keyframes twinkle { from { opacity: 0.2; } to { opacity: 0.6; } }
         @keyframes sweep { 0% { left: -120%; } 100% { left: 220%; } }
         @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.7; } 50% { transform: scale(1.08); opacity: 1; } }
 
-        .loading-text { 
-            position: relative; font-size: 14px; letter-spacing: 5px; 
-            margin-bottom: 25px; color: #fff; text-transform: uppercase; 
-            text-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
-            font-weight: 300;
-        }
-        .progress-container { position: relative; width: 180px; height: 3px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; }
-        .progress-bar { 
-            width: 100%; height: 100%; 
-            background: linear-gradient(90deg, #00d4ff, #9b51e0);
-            animation: loading-anim 2.5s infinite ease-in-out;
-            transform-origin: left;
-        }
-        @keyframes loading-anim {
-            0% { transform: scaleX(0); }
-            50% { transform: scaleX(1); }
-            100% { transform: scaleX(0); transform-origin: right; }
-        }
+        .loading-text { font-size: 11px; letter-spacing: 4px; color: #aaa; text-transform: uppercase; font-weight: 300; }
 
         /* --- VIEWER & SIDEBAR --- */
         .viewer-container { flex: 1; position: relative; background: radial-gradient(#333, #000); }
@@ -114,10 +99,20 @@
     <div class="stars"></div>
     <div class="diamond-container" id="diamond-bg"></div>
     <div class="shimmer-sweep"></div>
-    <p class="loading-text">Initializing</p>
-    <div class="progress-container">
-        <div class="progress-bar"></div>
+    
+    <div class="logo-wrap">
+        <span class="sub-logo">Unofficial AJPW</span>
+        <h1 class="main-logo">Griffin Previewer</h1>
     </div>
+
+    <div class="spinner-container">
+        <div class="spin-diamond"></div>
+        <div class="spin-diamond"></div>
+        <div class="spin-diamond"></div>
+        <div class="spin-diamond"></div>
+    </div>
+
+    <p class="loading-text">Initializing Assets</p>
 </div>
 
 <div class="viewer-container">
@@ -192,24 +187,19 @@
 </div>
 
 <script>
-    // Create Varied Background Diamonds
+    // BG Setup
     const dbg = document.getElementById('diamond-bg');
     for(let i=0; i<35; i++) {
         const d = document.createElement('div');
-        d.className = 'diamond';
-        // Random sizes: 100px to 220px
+        d.className = 'bg-diamond';
         const size = 100 + Math.random() * 120;
-        d.style.width = `${size}px`;
-        d.style.height = `${size * 1.5}px`;
-        // Random positions
-        d.style.left = `${Math.random() * 100}%`;
-        d.style.top = `${Math.random() * 100}%`;
+        d.style.width = `${size}px`; d.style.height = `${size * 1.5}px`;
+        d.style.left = `${Math.random() * 100}%`; d.style.top = `${Math.random() * 100}%`;
         d.style.animationDelay = `${Math.random() * 5}s`;
         dbg.appendChild(d);
     }
 
     const paletteData = [{ name: "Amethyst Wildflower", count: 12 }, { name: "Cerulean Sky", count: 14 }, { name: "Dreamy Lilac", count: 15 }, { name: "Dusty Taupe", count: 13 }, { name: "Earthy Umber", count: 15 }, { name: "Flaxen Ochre", count: 16 }, { name: "Florid Vermillion", count: 14 }, { name: "Forested Juniper", count: 14 }, { name: "Hazel Olive", count: 15 }, { name: "Lush Berry", count: 13 }, { name: "Misty Starlight", count: 13 }, { name: "Oceanic Sapphire", count: 15 }, { name: "Opulant Royalty", count: 14 }, { name: "Pale Pastel", count: 15 }, { name: "Rosy Sunset", count: 14 }, { name: "Russet Mahogany", count: 12 }, { name: "Seafoam Lagoon", count: 14 }, { name: "Shady Dark", count: 17 }, { name: "Smoky Dust", count: 13 }, { name: "Sunny Amber", count: 14 }, { name: "Verdant Lush", count: 15 }, { name: "Vibrant Neon", count: 18 }, { name: "Warm Tangerine", count: 15 }];
-    
     const crestList = ['bestial', 'pinnacle', 'windswept', 'harpy', 'none'];
     const wingList = ['heroic', 'osprey', 'manticore', 'scarab', 'seraph', 'none'];
     const tailList = ['fanned', 'svelte', 'tufted', 'scorpio', 'quetzal'];
@@ -244,7 +234,6 @@
         currentPattern = patternList[Math.floor(Math.random() * patternList.length)];
         currentEyeShape = eyeTextureList[Math.floor(Math.random() * eyeTextureList.length)];
         document.getElementById('eyeShapeSelect').value = currentEyeShape;
-
         if (main.model) {
             const sceneSymbol = Object.getOwnPropertySymbols(main).find(s => s.description === 'scene');
             const scene = main[sceneSymbol];
@@ -322,7 +311,6 @@
         const tcBake = await processTexture('Griffin_Tails_Crests.png');
         const eyeBake = await processTexture(currentEyeShape, true);
         const materialMap = { "Mat_GriffinBody": bodyBake, "Mat_Wings": wingBake, "Mat_Tails_Crests": tcBake, "Mat_Eyes": eyeBake };
-        
         for (const mat of main.model.materials) {
             const texData = materialMap[mat.name];
             if (texData) {
@@ -350,7 +338,6 @@
     function changeEyeShape(f) { currentEyeShape = f; updateAll(); }
     function changePattern(f) { currentPattern = f; updateAll(); }
     function hslToRgb(h, s, l) { const f = (n, k = (n + h / 30) % 12) => l - s * Math.min(l, 1 - l) * Math.max(Math.min(k - 3, 9 - k, 1), -1); return { r: Math.round(f(0) * 255), g: Math.round(f(8) * 255), b: Math.round(f(4) * 255) }; }
-    
     main.addEventListener('load', updateAll);
 </script>
 </body>
