@@ -64,6 +64,11 @@
         .swatch { width: 100%; aspect-ratio: 1; border-radius: 3px; cursor: pointer; border: 1px solid #444; transition: transform 0.1s; }
         .swatch:hover { transform: scale(1.1); border-color: white; }
 
+        .adv-settings { padding: 10px; font-size: 11px; color: #888; }
+        .adv-settings h4 { color: #00d4ff; margin: 10px 0 5px 0; text-transform: uppercase; font-size: 10px; }
+        .adv-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+        .adv-row input[type="checkbox"] { accent-color: #00d4ff; }
+
         @media (max-width: 768px) {
             body { flex-direction: column; }
             .sidebar { width: 100%; height: 45vh; border-left: none; border-top: 2px solid #00d4ff; }
@@ -211,6 +216,22 @@
     </details>
 
     <hr class="section-divider" style="margin-top:20px;">
+    
+    <details>
+        <summary>ADVANCED RANDOMIZER SETTINGS</summary>
+        <div class="adv-settings">
+            <h4>Trait Exclusions</h4>
+            <div id="trait-exclusions">
+                </div>
+            
+            <h4>Allowed Palettes (Colors)</h4>
+            <div style="font-size: 9px; margin-bottom: 8px;">If none selected, all are allowed.</div>
+            <div id="palette-filters">
+                </div>
+        </div>
+    </details>
+    
+    <hr class="section-divider" style="margin-top:20px;">
 </div>
 
 <script>
@@ -218,6 +239,38 @@
         crest: false, wing: false, tail: false, eyeshape: false, pattern: false,
         'eye-color': false, 'primary-color': false, 'secondary-color': false, 'tertiary-color': false
     };
+
+    const paletteData = [
+        { name: "Amethyst Wildflower", hexes: ["#8C73AB", "#BDABD2", "#A174AB", "#CCADD0", "#724B79", "#A56FA9", "#BB8DBE", "#7B4B6C", "#AF7199", "#9E8392", "#977D87", "#926075"] },
+        { name: "Cerulean Sky", hexes: ["#C3F4FF", "#23CBFE", "#26BCEA", "#42A8C7", "#7FDFFF", "#8ED5E7", "#CAEFFF", "#06AEFF", "#7DB3E2", "#6CB9FF", "#88A5FF", "#8EA5E7", "#94A2E6"] },
+        { name: "Dreamy Lilac", hexes: ["#8783FF", "#A190E9", "#9B82FE", "#A988DB", "#BD7CF8", "#A168D6", "#C790EB", "#9B4CCF", "#DB92F9", "#A64EC7", "#E171FF", "#EDA1FF", "#A120C1", "#BC3DD6", "#D889C5"] },
+        { name: "Dusty Taupe", hexes: ["#D2ACAA", "#D1B4AC", "#A39289", "#D1BDAD", "#D9B573", "#D9B574", "#D4CBB9", "#ECCF93", "#AC9B74", "#D7CCA0", "#D2CCAB", "#BBBA98", "#BCC5A0"] },
+        { name: "Earthy Umber", hexes: ["#AA7474", "#774E47", "#79544C", "#AB7D73", "#A26044", "#9C4819", "#9B4912", "#5C3525", "#AD8A73", "#776355", "#824F16", "#6E5F50", "#B76F29", "#976230", "#52461B"] },
+        { name: "Flaxen Ochre", hexes: ["#DFA219", "#957730", "#C28B06", "#DCAB28", "#C6A100", "#7B6607", "#CFB94C", "#807325", "#EDDC8F", "#ADA377", "#CDBA4F", "#968B2A", "#BCBC78", "#CACC49", "#D5DC88", "#CBD2AC"] },
+        { name: "Florid Vermillion", hexes: ["#950808", "#922F2F", "#B41E1F", "#EA201B", "#FC0706", "#F05B56", "#AA3B35", "#AD3A32", "#D3442D", "#903C2D", "#BC2B0C", "#CC634C", "#B04000", "#901C3B"] },
+        { name: "Forested Juniper", hexes: ["#3D4217", "#6F7A5A", "#474C39", "#657E49", "#285112", "#406F4B", "#294531", "#289464", "#257F56", "#174D36", "#256A4D", "#4D7567", "#42FAC6", "#2C978D"] },
+        { name: "Hazel Olive", hexes: ["#607A85", "#706D41", "#6F6F44", "#C0C003", "#5E5D04", "#78794C", "#9CA12E", "#707248", "#636924", "#A1AC4B", "#99AB33", "#819531", "#7D8654", "#5E6741", "#B4CB9E"] },
+        { name: "Lush Berry", hexes: ["#DD40BF", "#AE0488", "#CC4DA8", "#952D76", "#DE248B", "#B83278", "#962D54", "#A03F65", "#CB4E81", "#D02957", "#B92B51", "#B33357", "#EA3E6D"] },
+        { name: "Misty Starlight", hexes: ["#B2B3B5", "#999999", "#CACBCD", "#EFF0F2", "#E7E8EA", "#D3CFC5", "#ADDFF1", "#ACC5D4", "#ABB4D3", "#E1E8FF", "#B8C1DD", "#B0ABD1", "#C4B9CB"] },
+        { name: "Oceanic Sapphire", hexes: ["#3EA8CA", "#1B718B", "#4B6D7C", "#2F7894", "#0B64A3", "#5184B4", "#4C89F2", "#1F3A70", "#3F63B5", "#416FE4", "#0036DB", "#4B69CD", "#2F4495", "#062495", "#4000FB"] },
+        { name: "Opulant Royalty", hexes: ["#6160C3", "#4E4DC9", "#6761BB", "#402F8F", "#643EEC", "#6A4CCC", "#5B3BC8", "#6032B4", "#7037B4", "#6A2F95", "#6E1586", "#690A83", "#7A3987", "#822D95"] },
+        { name: "Pale Pastel", hexes: ["#FEDFBD", "#FEE6A5", "#FBF5E0", "#FFF1BA", "#FDFBD1", "#DBE2C3", "#BEFEC9", "#DDEDEA", "#D2EBF2", "#DAEAF6", "#BAD5FF", "#D5BCFF", "#E9DFF6", "#FFC8D1", "#FFE0E5"] },
+        { name: "Rosy Sunset", hexes: ["#FF6D70", "#DC7E72", "#EAA191", "#E2BAD4", "#D0ABC6", "#FF7FC0", "#E6BBCF", "#D998B2", "#E692B2", "#FF7EA1", "#FB759A", "#E77492", "#FF6882", "#FFB3BD"] },
+        { name: "Russet Mahogany", hexes: ["#4E0C09", "#7D0C06", "#5D0507", "#691819", "#6B352A", "#441E06", "#5D3A48", "#773A49", "#5D1023", "#6F192C", "#470F1E"] },
+        { name: "Seafoam Lagoon", hexes: ["#A1DCB8", "#86D6AB", "#80FFBE", "#45C78B", "#93EAC4", "#3EF2A8", "#2EE196", "#AED2C4", "#24AB85", "#39CFB0", "#ABD3CD", "#8DEAE4", "#7FABAC", "#B8DDE3", "#729CAA"] },
+        { name: "Shady Dark", hexes: ["#333230", "#151515", "#514745", "#2C2B29", "#1B4457", "#172547", "#071961", "#00027C", "#01003F", "#29267E", "#24105E", "#381B94", "#3E0080", "#674B79", "#2D0040", "#3F2D4B", "#480D53"] },
+        { name: "Smoky Dust", hexes: ["#434247", "#7B7B7B", "#646567", "#514C4B", "#7180AB", "#47577D", "#505360", "#6D7197", "#8984C6", "#7F73AB", "#564C76", "#6E6679", "#767076"] },
+        { name: "Sunny Amber", hexes: ["#F9DF96", "#FFCC35", "#FFBF04", "#FDCA1F", "#F6E281", "#F1D241", "#FEED95", "#FFE004", "#FCD90D", "#FBF148", "#EFEFAC", "#FFFDC6", "#FFFF68", "#E8E993"] },
+        { name: "Verdant Lush", hexes: ["#ACCB67", "#CBDD85", "#E0FF7F", "#D3E9AB", "#8ECC4B", "#BEEA94", "#629431", "#8ABE6E", "#72D33F", "#378419", "#94FE71", "#72B47E", "#0EB23B", "#39AC74", "#74AA96"] },
+        { name: "Vibrant Neon", hexes: ["#FF6512", "#FFFF13", "#DEFF13", "#BEFF00", "#7AFE49", "#31F84B", "#17F9AC", "#67FED8", "#21FEC0", "#21FEFC", "#2A4FFF", "#8367FF", "#6308F9", "#C602FA", "#FF00FF", "#FE66CE", "#FF007F", "#FF235F"] },
+        { name: "Warm Tangerine", hexes: ["#FD9F7F", "#ECAE91", "#EB6923", "#F26E23", "#FF7C31", "#FFA36C", "#CB7B4C", "#E59764", "#FCA14E", "#FF7F02", "#CF8436", "#FAB771", "#CD8E4D", "#F8D6A6", "#FDA203"] }
+    ];
+
+    const crestList = ['bestial', 'pinnacle', 'windswept', 'harpy', 'none'];
+    const wingList = ['heroic', 'osprey', 'manticore', 'scarab', 'seraph', 'none'];
+    const tailList = ['fanned', 'svelte', 'tufted', 'scorpio', 'quetzal'];
+    const patternList = ['Griffin_Pattern00_HQ.png', 'Griffin_Pattern02_HQ.png', 'Griffin_Pattern01_HQ.png', 'Griffin_Pattern03_HQ.png', 'Griffin_Pattern04_HQ.png'];
+    const eyeTextureList = Array.from({length: 12}, (_, i) => `Eye${i.toString().padStart(2, '0')}_Texture.png`);
 
     function toggleLock(event, key) {
         event.preventDefault();
@@ -239,23 +292,6 @@
         dbg.appendChild(d);
     }
 
-    const paletteData = [
-        { name: "Amethyst Wildflower", count: 12 }, { name: "Cerulean Sky", count: 14 }, { name: "Dreamy Lilac", count: 15 }, 
-        { name: "Dusty Taupe", count: 13 }, { name: "Earthy Umber", count: 15 }, { name: "Flaxen Ochre", count: 16 }, 
-        { name: "Florid Vermillion", count: 14 }, { name: "Forested Juniper", count: 14 }, { name: "Hazel Olive", count: 15 }, 
-        { name: "Lush Berry", count: 13 }, { name: "Misty Starlight", count: 13 }, { name: "Oceanic Sapphire", count: 15 }, 
-        { name: "Opulant Royalty", count: 14 }, { name: "Pale Pastel", count: 15 }, { name: "Rosy Sunset", count: 14 }, 
-        { name: "Russet Mahogany", count: 12 }, { name: "Seafoam Lagoon", count: 14 }, { name: "Shady Dark", count: 17 }, 
-        { name: "Smoky Dust", count: 13 }, { name: "Sunny Amber", count: 14 }, { name: "Verdant Lush", count: 15 }, 
-        { name: "Vibrant Neon", count: 18 }, { name: "Warm Tangerine", count: 15 }
-    ];
-
-    const crestList = ['bestial', 'pinnacle', 'windswept', 'harpy', 'none'];
-    const wingList = ['heroic', 'osprey', 'manticore', 'scarab', 'seraph', 'none'];
-    const tailList = ['fanned', 'svelte', 'tufted', 'scorpio', 'quetzal'];
-    const patternList = ['Griffin_Pattern00_HQ.png', 'Griffin_Pattern02_HQ.png', 'Griffin_Pattern01_HQ.png', 'Griffin_Pattern03_HQ.png', 'Griffin_Pattern04_HQ.png'];
-    const eyeTextureList = Array.from({length: 12}, (_, i) => `Eye${i.toString().padStart(2, '0')}_Texture.png`);
-
     const main = document.querySelector('#griffin');
     let colors = { primary: {r:255, g:255, b:255}, secondary: {r:255, g:255, b:255}, tertiary: {r:255, g:255, b:255}, eye: {r:255, g:255, b:255} };
     let currentPattern = 'Griffin_Pattern00_HQ.png';
@@ -265,17 +301,34 @@
     const offscreenCanvas = document.createElement('canvas');
     const offscreenCtx = offscreenCanvas.getContext('2d', { willReadFrequently: true });
 
-    document.querySelectorAll('details').forEach((det) => {
-        det.addEventListener('toggle', () => {
-            if (det.open) {
-                document.querySelectorAll('details').forEach((other) => {
-                    if (other !== det) other.removeAttribute('open');
-                });
-            }
+    // Setup Exclusions and Filters UI
+    const traitExContainer = document.getElementById('trait-exclusions');
+    const paletteFilterContainer = document.getElementById('palette-filters');
+
+    const traitCategories = { Crest: crestList, Wings: wingList, Tail: tailList };
+    Object.keys(traitCategories).forEach(cat => {
+        const h = document.createElement('div'); h.style.margin = "5px 0"; h.style.fontWeight = "bold"; h.textContent = cat;
+        traitExContainer.appendChild(h);
+        traitCategories[cat].forEach(t => {
+            const row = document.createElement('div'); row.className = "adv-row";
+            row.innerHTML = `<input type="checkbox" id="ex-${t}"> <label for="ex-${t}">${t.toUpperCase()}</label>`;
+            traitExContainer.appendChild(row);
         });
     });
 
-    function randomizeAll() { randomizeTraits(); randomizeColors(); }
+    ["eye-color", "primary-color", "secondary-color", "tertiary-color"].forEach(slot => {
+        const h = document.createElement('div'); h.style.margin = "5px 0"; h.style.fontWeight = "bold"; h.textContent = slot.replace("-", " ").toUpperCase();
+        paletteFilterContainer.appendChild(h);
+        paletteData.forEach(p => {
+            const row = document.createElement('div'); row.className = "adv-row";
+            row.innerHTML = `<input type="checkbox" class="pal-check-${slot}" data-palette="${p.name}"> <label>${p.name}</label>`;
+            paletteFilterContainer.appendChild(row);
+        });
+    });
+
+    function getFilteredList(list) {
+        return list.filter(item => !document.getElementById(`ex-${item}`).checked);
+    }
 
     function randomizeTraits() {
         if (!locks.eyeshape) {
@@ -283,9 +336,14 @@
             currentEyeShape = eyeTextureList[Math.floor(Math.random() * eyeTextureList.length)];
             document.getElementById('eyeShapeSelect').value = currentEyeShape;
         }
-        if (!locks.crest) activeParts.crest = crestList[Math.floor(Math.random() * crestList.length)];
-        if (!locks.wing) activeParts.wing = wingList[Math.floor(Math.random() * wingList.length)];
-        if (!locks.tail) activeParts.tail = tailList[Math.floor(Math.random() * tailList.length)];
+        
+        const cList = getFilteredList(crestList);
+        const wList = getFilteredList(wingList);
+        const tList = getFilteredList(tailList);
+
+        if (!locks.crest && cList.length) activeParts.crest = cList[Math.floor(Math.random() * cList.length)];
+        if (!locks.wing && wList.length) activeParts.wing = wList[Math.floor(Math.random() * wList.length)];
+        if (!locks.tail && tList.length) activeParts.tail = tList[Math.floor(Math.random() * tList.length)];
         if (!locks.pattern) currentPattern = patternList[Math.floor(Math.random() * patternList.length)];
         
         if (main.model) {
@@ -303,12 +361,30 @@
         updateAll();
     }
 
+    function getRndColor(slot) {
+        const checks = document.querySelectorAll(`.pal-check-${slot}:checked`);
+        let pools = [];
+        if (checks.length > 0) {
+            const names = Array.from(checks).map(c => c.getAttribute('data-palette'));
+            pools = paletteData.filter(p => names.includes(p.name));
+        } else {
+            pools = paletteData;
+        }
+        const chosenPalette = pools[Math.floor(Math.random() * pools.length)];
+        const hex = chosenPalette.hexes[Math.floor(Math.random() * chosenPalette.hexes.length)];
+        return hexToRgb(hex);
+    }
+
+    function hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : null;
+    }
+
     function randomizeColors() {
-        const rnd = () => hslToRgb(Math.random() * 360, 0.7, 0.55);
-        if (!locks['primary-color']) colors.primary = rnd();
-        if (!locks['secondary-color']) colors.secondary = rnd();
-        if (!locks['tertiary-color']) colors.tertiary = rnd();
-        if (!locks['eye-color']) colors.eye = rnd();
+        if (!locks['primary-color']) colors.primary = getRndColor('primary-color');
+        if (!locks['secondary-color']) colors.secondary = getRndColor('secondary-color');
+        if (!locks['tertiary-color']) colors.tertiary = getRndColor('tertiary-color');
+        if (!locks['eye-color']) colors.eye = getRndColor('eye-color');
         updateAll();
     }
 
@@ -404,22 +480,29 @@
             pg.innerHTML = `<div class="color-grid"></div>`;
             container.appendChild(pg);
             const grid = pg.querySelector('.color-grid');
-            for(let i=0; i<p.count; i++) {
-                const h = (i * 360) / p.count;
+            p.hexes.forEach(hex => {
                 const s = document.createElement('div');
-                s.className = "swatch"; s.style.background = `hsl(${h}, 70%, 55%)`;
-                s.onclick = () => { colors[type] = hslToRgb(h, 0.7, 0.55); updateAll(); };
+                s.className = "swatch"; s.style.background = hex;
+                s.onclick = () => { colors[type] = hexToRgb(hex); updateAll(); };
                 grid.appendChild(s);
+            });
+        });
+    });
+
+    function randomizeAll() { randomizeTraits(); randomizeColors(); }
+    function changeEyeShape(f) { currentEyeShape = f; updateAll(); }
+    function changePattern(f) { currentPattern = f; updateAll(); }
+
+    document.querySelectorAll('details').forEach((det) => {
+        det.addEventListener('toggle', () => {
+            if (det.open) {
+                document.querySelectorAll('details').forEach((other) => {
+                    if (other !== det) other.removeAttribute('open');
+                });
             }
         });
     });
 
-    function changeEyeShape(f) { currentEyeShape = f; updateAll(); }
-    function changePattern(f) { currentPattern = f; updateAll(); }
-    function hslToRgb(h, s, l) {
-        const f = (n, k = (n + h / 30) % 12) => l - s * Math.min(l, 1 - l) * Math.max(Math.min(k - 3, 9 - k, 1), -1);
-        return { r: Math.round(f(0) * 255), g: Math.round(f(8) * 255), b: Math.round(f(4) * 255) };
-    }
     main.addEventListener('load', updateAll);
 </script>
 </body>
