@@ -8,17 +8,65 @@
     <style>
         body { margin: 0; background: #000; color: white; font-family: sans-serif; display: flex; height: 100vh; overflow: hidden; }
         
+        /* --- ENHANCED LOADING SCREEN --- */
         #loading-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; display: flex; flex-direction: column;
+            background: #000; 
+            display: flex; flex-direction: column;
             justify-content: center; align-items: center; z-index: 100;
-            transition: opacity 0.5s ease;
+            transition: opacity 0.8s ease;
+            overflow: hidden;
         }
-        .loading-text { font-size: 14px; letter-spacing: 2px; margin-bottom: 15px; color: #fff; text-transform: uppercase; }
-        .progress-container { width: 200px; height: 6px; background: #222; border-radius: 10px; overflow: hidden; }
+
+        /* Starfield Effect */
+        .stars {
+            position: absolute; width: 100%; height: 100%;
+            background-image: 
+                radial-gradient(1px 1px at 20px 30px, #fff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 50px 100px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 150px 150px, #fff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 250px 50px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 300px 250px, #fff, rgba(0,0,0,0));
+            background-size: 350px 350px;
+            opacity: 0.5;
+            animation: twinkle 4s infinite alternate;
+        }
+
+        /* Diamond Patterns */
+        .diamond-container {
+            position: absolute; width: 150%; height: 150%;
+            display: flex; flex-wrap: wrap; justify-content: center;
+            opacity: 0.15; transform: rotate(-15deg);
+            pointer-events: none;
+        }
+        .diamond {
+            width: 120px; height: 180px; margin: 10px;
+            background: linear-gradient(135deg, #00d4ff 0%, #9b51e0 100%);
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+            animation: pulse 6s infinite ease-in-out;
+        }
+
+        /* Shimmer Sweep */
+        .shimmer-sweep {
+            position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+            transform: skewX(-20deg);
+            animation: sweep 5s infinite;
+        }
+
+        @keyframes twinkle { from { opacity: 0.3; } to { opacity: 0.7; } }
+        @keyframes sweep { 0% { left: -100%; } 100% { left: 200%; } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } }
+
+        .loading-text { 
+            position: relative; font-size: 16px; letter-spacing: 4px; 
+            margin-bottom: 20px; color: #fff; text-transform: uppercase; 
+            text-shadow: 0 0 10px rgba(155, 81, 224, 0.8);
+        }
+        .progress-container { position: relative; width: 240px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
         .progress-bar { 
             width: 100%; height: 100%; 
-            background: linear-gradient(90deg, #00d4ff 0%, #9b51e0 100%);
+            background: linear-gradient(90deg, #00d4ff, #9b51e0);
             animation: loading-anim 2s infinite ease-in-out;
             transform-origin: left;
         }
@@ -28,6 +76,7 @@
             100% { transform: scaleX(0); transform-origin: right; }
         }
 
+        /* --- VIEWER & SIDEBAR --- */
         .viewer-container { flex: 1; position: relative; background: radial-gradient(#333, #000); }
         model-viewer { width: 100%; height: 100%; --poster-color: transparent; }
         
@@ -40,15 +89,17 @@
 
         details { margin-bottom: 5px; background: #2d2d2d; border-radius: 4px; }
         summary { padding: 12px; font-weight: bold; cursor: pointer; background: #333; display: flex; justify-content: space-between; font-size: 13px; list-style: none; }
+        summary::-webkit-details-marker { display: none; }
         
         .button-stack { display: flex; flex-direction: column; padding: 10px; gap: 5px; }
         button.part-btn { background: #444; color: #ddd; border: 1px solid #555; padding: 10px; text-align: left; border-radius: 4px; cursor: pointer; font-size: 12px; }
         button.part-btn:hover { background: #555; border-color: #ff9d00; }
-        select.part-select { background: #444; color: white; border: 1px solid #555; padding: 10px; border-radius: 4px; width: 100%; }
+        select.part-select { background: #444; color: white; border: 1px solid #555; padding: 10px; border-radius: 4px; width: 100%; cursor: pointer; }
         
         .palette-group { background: #1a1a1a; padding: 5px; border-top: 1px solid #333; }
         .color-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 10px; }
-        .swatch { width: 100%; aspect-ratio: 1; border-radius: 3px; cursor: pointer; border: 1px solid #444; }
+        .swatch { width: 100%; aspect-ratio: 1; border-radius: 3px; cursor: pointer; border: 1px solid #444; transition: transform 0.1s; }
+        .swatch:hover { transform: scale(1.1); border-color: white; }
 
         @media (max-width: 768px) {
             body { flex-direction: column; }
@@ -60,6 +111,9 @@
 <body>
 
 <div id="loading-overlay">
+    <div class="stars"></div>
+    <div class="diamond-container" id="diamond-bg"></div>
+    <div class="shimmer-sweep"></div>
     <p class="loading-text">Loading Assets</p>
     <div class="progress-container">
         <div class="progress-bar"></div>
@@ -138,6 +192,15 @@
 </div>
 
 <script>
+    // Create background diamonds
+    const dbg = document.getElementById('diamond-bg');
+    for(let i=0; i<40; i++) {
+        const d = document.createElement('div');
+        d.className = 'diamond';
+        d.style.animationDelay = `${Math.random() * 5}s`;
+        dbg.appendChild(d);
+    }
+
     const paletteData = [{ name: "Amethyst Wildflower", count: 12 }, { name: "Cerulean Sky", count: 14 }, { name: "Dreamy Lilac", count: 15 }, { name: "Dusty Taupe", count: 13 }, { name: "Earthy Umber", count: 15 }, { name: "Flaxen Ochre", count: 16 }, { name: "Florid Vermillion", count: 14 }, { name: "Forested Juniper", count: 14 }, { name: "Hazel Olive", count: 15 }, { name: "Lush Berry", count: 13 }, { name: "Misty Starlight", count: 13 }, { name: "Oceanic Sapphire", count: 15 }, { name: "Opulant Royalty", count: 14 }, { name: "Pale Pastel", count: 15 }, { name: "Rosy Sunset", count: 14 }, { name: "Russet Mahogany", count: 12 }, { name: "Seafoam Lagoon", count: 14 }, { name: "Shady Dark", count: 17 }, { name: "Smoky Dust", count: 13 }, { name: "Sunny Amber", count: 14 }, { name: "Verdant Lush", count: 15 }, { name: "Vibrant Neon", count: 18 }, { name: "Warm Tangerine", count: 15 }];
     
     const crestList = ['bestial', 'pinnacle', 'windswept', 'harpy', 'none'];
@@ -155,6 +218,7 @@
     const offscreenCanvas = document.createElement('canvas');
     const offscreenCtx = offscreenCanvas.getContext('2d', { willReadFrequently: true });
 
+    // Accordion
     document.querySelectorAll('details').forEach((det) => {
         det.addEventListener('toggle', (e) => {
             if (det.open) {
@@ -169,11 +233,8 @@
         activeParts.eye = Math.random() > 0.5 ? 'Mesh_Eyes_Normal' : 'Mesh_Eyes_Lashes';
         activeParts.crest = crestList[Math.floor(Math.random() * crestList.length)];
         activeParts.wing = wingList[Math.floor(Math.random() * wingList.length)];
-        
-        // TAIL FIX: Pick exactly one and force visibility logic
         const randomTail = tailList[Math.floor(Math.random() * tailList.length)];
         activeParts.tail = randomTail;
-        
         currentPattern = patternList[Math.floor(Math.random() * patternList.length)];
         currentEyeShape = eyeTextureList[Math.floor(Math.random() * eyeTextureList.length)];
         document.getElementById('eyeShapeSelect').value = currentEyeShape;
@@ -265,7 +326,7 @@
         }
         Object.keys(activeParts).forEach(type => togglePart(type, activeParts[type]));
         const loader = document.getElementById('loading-overlay');
-        if (loader) { loader.style.opacity = '0'; setTimeout(() => loader.remove(), 500); }
+        if (loader) { loader.style.opacity = '0'; setTimeout(() => loader.remove(), 800); }
     }
 
     ["primary", "secondary", "tertiary", "eye"].forEach(type => {
