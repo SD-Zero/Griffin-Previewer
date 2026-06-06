@@ -274,7 +274,7 @@
             offscreenCtx.putImageData(imageData, 0, 0);
             return offscreenCanvas.toDataURL();
         } catch (e) {
-            console.warn("Texture load failed:", imgSrc);
+            console.warn("Texture load failed (CORS or 404):", imgSrc);
             return null;
         }
     }
@@ -300,7 +300,13 @@
     }
 
     async function updateAll() {
+        // SAFETY: Force loader away so you can see why it's broken
+        const loader = document.getElementById('loading-overlay');
+        if (loader) { loader.style.opacity = '0'; setTimeout(() => loader.remove(), 800); }
+
         if (!main.model) return;
+        
+        // Try bakes
         const b = await processTexture(currentPattern);
         const w = await processTexture('Griffin_Wings.png');
         const t = await processTexture('Griffin_Tails_Crests.png');
@@ -311,13 +317,10 @@
             const data = materialMap[mat.name];
             if (data) main.createTexture(data).then(tex => {
                 if(mat.pbrMetallicRoughness.baseColorTexture) mat.pbrMetallicRoughness.baseColorTexture.setTexture(tex);
-            });
+            }).catch(err => console.error("Texture Application Error:", err));
         });
         
         Object.keys(activeParts).forEach(type => togglePart(type, activeParts[type]));
-        
-        const loader = document.getElementById('loading-overlay');
-        if (loader) { loader.style.opacity = '0'; setTimeout(() => loader.remove(), 1000); }
     }
 
     function switchPalette(type, paletteName) {
