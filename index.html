@@ -98,7 +98,7 @@
 </div>
 
 <div class="viewer-container">
-    <model-viewer id="griffin" src="griffin-main.glb" camera-controls auto-rotate interaction-prompt="none" shadow-intensity="1" exposure="1.2" environment-image="neutral"></model-viewer>
+    <model-viewer id="griffin" src="griffin-main.glb" camera-controls auto-rotate interaction-prompt="none" shadow-intensity="1" shadow-softness="1" exposure="1.1" environment-image="neutral"></model-viewer>
 </div>
 
 <div class="sidebar">
@@ -453,6 +453,12 @@
             if (texData) {
                 const tex = await main.createTexture(texData);
                 if(mat.pbrMetallicRoughness.baseColorTexture) mat.pbrMetallicRoughness.baseColorTexture.setTexture(tex);
+                
+                // DECREASE SHININESS HERE
+                // 1.0 is full rough (matte), 0.0 is smooth (mirror)
+                mat.pbrMetallicRoughness.setRoughnessFactor(0.85); 
+                // 0.0 is non-metallic
+                mat.pbrMetallicRoughness.setMetallicFactor(0.0);
             }
         }
         Object.keys(activeParts).forEach(type => togglePart(type, activeParts[type]));
