@@ -6,9 +6,8 @@
     <title>Griffin Creator Ultimate</title>
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; background: #111; color: white; font-family: sans-serif; display: flex; height: 100vh; overflow: hidden; }
+        body { margin: 0; background: #000; color: white; font-family: sans-serif; display: flex; height: 100vh; overflow: hidden; }
         
-        /* Loading Screen */
         #loading-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; display: flex; flex-direction: column;
@@ -41,12 +40,11 @@
 
         details { margin-bottom: 5px; background: #2d2d2d; border-radius: 4px; }
         summary { padding: 12px; font-weight: bold; cursor: pointer; background: #333; display: flex; justify-content: space-between; font-size: 13px; list-style: none; }
-        summary::-webkit-details-marker { display: none; }
         
         .button-stack { display: flex; flex-direction: column; padding: 10px; gap: 5px; }
         button.part-btn { background: #444; color: #ddd; border: 1px solid #555; padding: 10px; text-align: left; border-radius: 4px; cursor: pointer; font-size: 12px; }
         button.part-btn:hover { background: #555; border-color: #ff9d00; }
-        select.part-select { background: #444; color: white; border: 1px solid #555; padding: 10px; border-radius: 4px; cursor: pointer; font-size: 12px; width: 100%; }
+        select.part-select { background: #444; color: white; border: 1px solid #555; padding: 10px; border-radius: 4px; width: 100%; }
         
         .palette-group { background: #1a1a1a; padding: 5px; border-top: 1px solid #333; }
         .color-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 10px; }
@@ -80,7 +78,7 @@
         <button class="rnd-btn" onclick="randomizeColors()">Random Colors</button>
     </div>
 
-    <details open id="eye-shapes-menu"><summary>EYE SHAPES</summary><div class="button-stack">
+    <details open><summary>EYE SHAPES</summary><div class="button-stack">
         <button class="part-btn" onclick="togglePart('eye', 'Mesh_Eyes_Normal')">Standard Eyes</button>
         <button class="part-btn" onclick="togglePart('eye', 'Mesh_Eyes_Lashes')">Eyelash Eyes</button>
         <hr style="border:0; border-top:1px solid #444; margin:5px 0;">
@@ -171,10 +169,27 @@
         activeParts.eye = Math.random() > 0.5 ? 'Mesh_Eyes_Normal' : 'Mesh_Eyes_Lashes';
         activeParts.crest = crestList[Math.floor(Math.random() * crestList.length)];
         activeParts.wing = wingList[Math.floor(Math.random() * wingList.length)];
-        activeParts.tail = tailList[Math.floor(Math.random() * tailList.length)];
+        
+        // TAIL FIX: Pick exactly one and force visibility logic
+        const randomTail = tailList[Math.floor(Math.random() * tailList.length)];
+        activeParts.tail = randomTail;
+        
         currentPattern = patternList[Math.floor(Math.random() * patternList.length)];
         currentEyeShape = eyeTextureList[Math.floor(Math.random() * eyeTextureList.length)];
         document.getElementById('eyeShapeSelect').value = currentEyeShape;
+
+        if (main.model) {
+            const sceneSymbol = Object.getOwnPropertySymbols(main).find(s => s.description === 'scene');
+            const scene = main[sceneSymbol];
+            if (scene) {
+                scene.traverse((obj) => {
+                    if (obj.isMesh || obj.isGroup) {
+                        const name = obj.name.toLowerCase();
+                        if (tailList.includes(name)) obj.visible = (name === randomTail.toLowerCase());
+                    }
+                });
+            }
+        }
         updateAll();
     }
 
@@ -249,7 +264,6 @@
             }
         }
         Object.keys(activeParts).forEach(type => togglePart(type, activeParts[type]));
-        
         const loader = document.getElementById('loading-overlay');
         if (loader) { loader.style.opacity = '0'; setTimeout(() => loader.remove(), 500); }
     }
