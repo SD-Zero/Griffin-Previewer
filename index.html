@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Griffin Previewer | Unofficial AJPW</title>
+    <title>Unofficial Griffin Previewer</title>
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <style>
         body { margin: 0; background: #000; color: white; font-family: sans-serif; display: flex; height: 100vh; overflow: hidden; }
@@ -166,8 +166,8 @@
     <details>
         <summary>EYE SHAPE <span class="lock-icon" id="lock-eyeshape" onclick="toggleLock(event, 'eyeshape')">🔓</span></summary>
         <div class="button-stack">
-            <button class="part-btn" onclick="togglePart('eye', 'Mesh_Eyes_Normal')">Standard Eyes</button>
-            <button class="part-btn" onclick="togglePart('eye', 'Mesh_Eyes_Lashes')">Eyelash Eyes</button>
+            <button class="part-btn" onclick="togglePart('eye', 'Mesh_Eyes_Normal')">No Lashes</button>
+            <button class="part-btn" onclick="togglePart('eye', 'Mesh_Eyes_Lashes')">Lashes</button>
             <hr style="border:0; border-top:1px solid #333; margin:5px 0;">
             <select id="eyeShapeSelect" class="part-select" onchange="changeEyeShape(this.value)">
                 <option value="Eye00_Texture.png">Ordinary</option>
